@@ -3,6 +3,9 @@
 
 #include <Arduino.h>
 
+// allow for non blocking error beeps
+// this class is currently unused
+
 class Buzzer {
 public:
   // Constructor

@@ -88,15 +88,15 @@ void loop() {
       roverSetEnables(enables);
       break;
   }
-
-  buzzer.update();
+  
+  //buzzer.update();
 }
 
 
 void telemetry() {
-  RoveComm.write(RC_PMSBOARD_PACKCURRENT_DATA_ID, RC_PMSBOARD_PACKCURRENT_DATA_COUNT, packCurrent);
-  RoveComm.write(RC_PMSBOARD_PACKVOLTAGE_DATA_ID, RC_PMSBOARD_PACKVOLTAGE_DATA_COUNT, packVoltage);
   RoveComm.write(RC_PMSBOARD_CELLVOLTAGE_DATA_ID, RC_PMSBOARD_CELLVOLTAGE_DATA_COUNT, cellVoltages);
+  RoveComm.write(RC_PMSBOARD_PACKVOLTAGE_DATA_ID, RC_PMSBOARD_PACKVOLTAGE_DATA_COUNT, packVoltage);
+  RoveComm.write(RC_PMSBOARD_PACKCURRENT_DATA_ID, RC_PMSBOARD_PACKCURRENT_DATA_COUNT, packCurrent);
   RoveComm.write(RC_PMSBOARD_AUXCURRENT_DATA_ID, RC_PMSBOARD_AUXCURRENT_DATA_COUNT, auxCurrent);
   RoveComm.write(RC_PMSBOARD_MISCCURRENT_DATA_ID, RC_PMSBOARD_MISCCURRENT_DATA_COUNT, miscCurrents);
 }
@@ -130,22 +130,22 @@ void readCells() {
 void roverEStop() {
   // keep POE and network switch on
   roverSetEnables(0);
-  //beep bc PMS is on, but everything else off
-  while (true) {
-    // smoke detector beep pattern
-    digitalWrite(BUZZER_CTL_PIN, HIGH);
-    delay(1000);
-    digitalWrite(BUZZER_CTL_PIN, LOW);
-    delay(30000);
-  }
-  roverSetEnables(MOTOR_ENABLE_BIT | CORE_ENABLE_BIT | AUX_ENABLE_BIT);
+
+  digitalWrite(BUZZER_CTL_PIN, HIGH); // blocking beep
+  delay(1000);
+  digitalWrite(BUZZER_CTL_PIN, LOW);
 }
 
 void roverSuicide() {
+  // turn everything off
   roverSetEnables(0);
   // turn off POE and network switch
   digitalWrite(POE_ENABLE_PIN, HIGH);
   digitalWrite(NS_ENABLE_PIN, HIGH);
+
+  digitalWrite(BUZZER_CTL_PIN, HIGH); // blocking beep
+  delay(1000);
+  digitalWrite(BUZZER_CTL_PIN, LOW);
 }
 
 void roverRestart() {
@@ -153,7 +153,7 @@ void roverRestart() {
   digitalWrite(POE_ENABLE_PIN, HIGH);
   digitalWrite(NS_ENABLE_PIN, HIGH);
 
-  digitalWrite(BUZZER_CTL_PIN, HIGH);
+  digitalWrite(BUZZER_CTL_PIN, HIGH); // blocking beep
   delay(RESTART_DELAY);
   digitalWrite(BUZZER_CTL_PIN, LOW);
 
@@ -165,11 +165,11 @@ void roverRestart() {
 
 void roverSetEnables(uint8_t bitfield) {
   if ((enables ^ bitfield) & MOTOR_ENABLE_BIT)
-    digitalWrite(MOTOR_ENABLE_PIN, bool(bitfield & MOTOR_ENABLE_BIT) ? HIGH : LOW);
+    digitalWrite(MOTOR_ENABLE_PIN, (bitfield & MOTOR_ENABLE_BIT) > 0 ? HIGH : LOW);
   if ((enables ^ bitfield) & CORE_ENABLE_BIT)
-    digitalWrite(MOTOR_ENABLE_PIN, bool(bitfield & CORE_ENABLE_BIT) ? HIGH : LOW);
+    digitalWrite(MOTOR_ENABLE_PIN, (bitfield & CORE_ENABLE_BIT) > 0 ? HIGH : LOW);
   if ((enables ^ bitfield) & AUX_ENABLE_BIT)
-    digitalWrite(MOTOR_ENABLE_PIN, bool(bitfield & AUX_ENABLE_BIT) ? HIGH : LOW);
+    digitalWrite(MOTOR_ENABLE_PIN, (bitfield & AUX_ENABLE_BIT) > 0 ? HIGH : LOW);
   enables = bitfield;
 }
 
@@ -198,7 +198,7 @@ void errorAuxOvercurrent() {
     roverRestart();
     lastAuxOvercurrentErrorTimestamp = now;
   } else {
-    roverEStop();
+    roverSetEnables(MOTOR_ENABLE_BIT | CORE_ENABLE_BIT); // disable Aux
   }
 }
 
@@ -209,5 +209,5 @@ void errorCellUndervoltage() {
 
 void errorCellCritical() {
   RoveComm.writeReliable(RC_PMSBOARD_CELLCRITICAL_DATA_ID, RC_PMSBOARD_CELLCRITICAL_DATA_COUNT, dummy);
-  roverEStop();
+  roverSuicide();
 }

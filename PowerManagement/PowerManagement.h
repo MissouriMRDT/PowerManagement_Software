@@ -68,7 +68,7 @@ float miscCurrents[NUM_MISC_CURRENTS] = {0};
 uint32_t lastPackOvercurrentErrorTimestamp = 0;
 uint32_t lastAuxOvercurrentErrorTimestamp = 0;
 
-Buzzer buzzer(BUZZER_CTL_PIN);
+//Buzzer buzzer(BUZZER_CTL_PIN); // unused for now
 
 // Function Declarations ///////////////////////////////////////////////////////////
 

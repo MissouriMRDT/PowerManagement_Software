@@ -36,6 +36,12 @@ void Buzzer::update() {
       case ' ':
         m_nextActionTimestamp = m_beginActionTimestamp + 100;
         break;
+      case '-':
+        m_nextActionTimestamp = m_beginActionTimestamp + 1000;
+        break;
+      case '=':
+        m_nextActionTimestamp = m_beginActionTimestamp + 10000;
+        break;
     }
     ++ m_position;
   }
