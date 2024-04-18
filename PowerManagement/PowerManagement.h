@@ -46,6 +46,12 @@ const int CELL_V_SENSE_PINS[] = {C1_V_SENSE_PIN, C2_V_SENSE_PIN, C3_V_SENSE_PIN,
 #define CELL_UNDERVOLT_THRESHOLD 2.7
 #define CELL_CRITICAL_THRESHOLD 2.5
 
+// Enable Bitmasks -- [Motor, Core, Aux]
+#define MOTOR_ENABLE_BIT   (1 << 0)
+#define CORE_ENABLE_BIT    (1 << 1)
+#define AUX_ENABLE_BIT     (1 << 2)
+#define NETWORK_ENABLE_BIT (1 << 3)
+
 
 // Global Variables /////////////////////////////////////////////////////////////////
 
@@ -65,10 +71,12 @@ float packCurrent = 0;
 float auxCurrent = 0;
 float miscCurrents[NUM_MISC_CURRENTS] = {0};
 
-uint32_t lastPackOvercurrentErrorTimestamp = 0;
-uint32_t lastAuxOvercurrentErrorTimestamp = 0;
+bool motorEnabled = false;
+bool coreEnabled = false;
+bool auxEnabled = false;
+bool networkEnabled = false; // NS and POE
 
-//Buzzer buzzer(BUZZER_CTL_PIN); // unused for now
+Buzzer buzzer(BUZZER_CTL_PIN); // unused for now
 
 // Function Declarations ///////////////////////////////////////////////////////////
 
@@ -86,11 +94,7 @@ void errorAuxOvercurrent();
 void errorCellUndervoltage();
 void errorCellCritical();
 
-// Enable Bitmasks -- [Motor, Core, Aux]
-#define MOTOR_ENABLE_BIT  (1 << 2)
-#define CORE_ENABLE_BIT   (1 << 1)
-#define AUX_ENABLE_BIT    (1 << 0)
-uint8_t enables = MOTOR_ENABLE_BIT | CORE_ENABLE_BIT | AUX_ENABLE_BIT;
-void roverSetEnables(uint8_t bitfield);
+void enableBusses(uint8_t bitmask);
+void disableBusses(uint8_t bitmask);
 
 #endif

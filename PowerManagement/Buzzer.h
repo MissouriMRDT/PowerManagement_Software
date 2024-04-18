@@ -10,10 +10,14 @@ class Buzzer {
 public:
   // Constructor
   Buzzer(uint8_t ctlPin): m_ctlPin(ctlPin) {}
+  
+  // call in setup()
+  void init();
+  // call in loop()
+  void update();
 
   // Member functions
   void buzz(const String &pattern);
-  void update();
 
 private:
   // Member variables

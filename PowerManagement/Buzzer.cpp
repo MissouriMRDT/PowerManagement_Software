@@ -25,10 +25,10 @@ void Buzzer::update() {
         digitalWrite(m_ctlPin, HIGH);
         break;
       case 'e':
-        m_nextActionTimestamp = m_beginActionTimestamp + 50;
+        m_nextActionTimestamp = m_beginActionTimestamp + 100;
         break;
       case 'E':
-        m_nextActionTimestamp = m_beginActionTimestamp + 500;
+        m_nextActionTimestamp = m_beginActionTimestamp + 1000;
         break;
       case 'p':
         digitalWrite(m_ctlPin, LOW);
@@ -45,4 +45,9 @@ void Buzzer::update() {
     }
     ++ m_position;
   }
+}
+
+void Buzzer::init() {
+  pinMode(m_ctlPin, OUTPUT);
+  digitalWrite(m_ctlPin, LOW);
 }
