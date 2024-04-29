@@ -14,7 +14,7 @@ const int CELL_V_SENSE_PINS[] = {C1_V_SENSE_PIN, C2_V_SENSE_PIN, C3_V_SENSE_PIN,
 
 // Current conversion factor (PACK CURRENT)
 //(512 .. 1023) -> (0 .. 200)
-#define PACK_I_SENSE_ADC_MIN 512
+#define PACK_I_SENSE_ADC_MIN 506 // this should be 512 ideally, but experimentally 0 corresponded with 506
 #define PACK_I_SENSE_ADC_MAX 1023
 #define PACK_I_SENSE_REAL_MIN 0.0
 #define PACK_I_SENSE_REAL_MAX 200.0
@@ -42,7 +42,6 @@ const int CELL_V_SENSE_PINS[] = {C1_V_SENSE_PIN, C2_V_SENSE_PIN, C3_V_SENSE_PIN,
 #define RESTART_DELAY 1000 // millis
 #define MAX_PACK_CURRENT 50 // Amps
 #define MAX_AUX_CURRENT 15 // Amps
-#define ALLOWABLE_OVERCURRENT_PERIOD 30000 // millis
 #define CELL_UNDERVOLT_THRESHOLD 2.7
 #define CELL_CRITICAL_THRESHOLD 2.5
 
@@ -51,7 +50,6 @@ const int CELL_V_SENSE_PINS[] = {C1_V_SENSE_PIN, C2_V_SENSE_PIN, C3_V_SENSE_PIN,
 #define CORE_ENABLE_BIT    (1 << 1)
 #define AUX_ENABLE_BIT     (1 << 2)
 #define NETWORK_ENABLE_BIT (1 << 3)
-
 
 // Global Variables /////////////////////////////////////////////////////////////////
 

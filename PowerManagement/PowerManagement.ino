@@ -57,34 +57,47 @@ void loop() {
 
   // Handle incoming RoveComm packets
   rovecomm_packet packet = RoveComm.read();
-
+  
   switch (packet.data_id) {
     //Estop
     case RC_PMSBOARD_ESTOP_DATA_ID:
+    {
       roverEStop();
       break;
+    }
     //Suicide
     case RC_PMSBOARD_SUICIDE_DATA_ID:
+    {
       roverSuicide();
       break;
+    }
     //Reboot
     case RC_PMSBOARD_REBOOT_DATA_ID:
+    {
       roverRestart();
       break;
-    
+    }
     //EnableBus
-    case RC_PMSBOARD_ENABLEBUS_DATA_ID:
+    case RC_PMSBOARD_ENABLEBUS_DATA_ID: 
+    {
       enableBusses(((uint8_t*)packet.data)[0]);
       break;
+    }
     //DisableBus
     case RC_PMSBOARD_DISABLEBUS_DATA_ID:
-      disableBusses(((uint8_t*)packet.data)[0]);
+    {
+      uint8_t data = ((uint8_t*)packet.data)[0] & ~NETWORK_ENABLE_BIT; // do not turn off network
+      disableBusses(data);
       break;
+    }
     //SetBus
     case RC_PMSBOARD_SETBUS_DATA_ID:
-      enableBusses(((uint8_t*)packet.data)[0]);
-      disableBusses(~((uint8_t*)packet.data)[0]);
+    {
+      uint8_t data = ((uint8_t*)packet.data)[0] | NETWORK_ENABLE_BIT; // make sure network switch is also enabled
+      enableBusses(data);
+      disableBusses(~data);
       break;
+    }
   }
   
   buzzer.update();
@@ -93,7 +106,7 @@ void loop() {
 void telemetry() {
   RoveComm.write(RC_PMSBOARD_CELLVOLTAGE_DATA_ID, RC_PMSBOARD_CELLVOLTAGE_DATA_COUNT, cellVoltages);
   RoveComm.write(RC_PMSBOARD_PACKVOLTAGE_DATA_ID, RC_PMSBOARD_PACKVOLTAGE_DATA_COUNT, packVoltage);
-  RoveComm.write(RC_PMSBOARD_PACKCURRENT_DATA_ID, RC_PMSBOARD_PACKCURRENT_DATA_COUNT, packCurrent);
+  RoveComm.write(RC_PMSBOARD_PACKCURRENT_DATA_ID, RC_PMSBOARD_PACKCURRENT_DATA_COUNT, -packCurrent); // someone put the current sensor in backwards
   RoveComm.write(RC_PMSBOARD_AUXCURRENT_DATA_ID, RC_PMSBOARD_AUXCURRENT_DATA_COUNT, auxCurrent);
   RoveComm.write(RC_PMSBOARD_MISCCURRENT_DATA_ID, RC_PMSBOARD_MISCCURRENT_DATA_COUNT, miscCurrents);
 
@@ -174,6 +187,7 @@ void errorPackOvercurrent() {
 void errorAuxOvercurrent() {
   RoveComm.writeReliable(RC_PMSBOARD_AUXOVERCURRENT_DATA_ID, RC_PMSBOARD_AUXOVERCURRENT_DATA_COUNT, dummy);
   disableBusses(AUX_ENABLE_BIT); // disable Aux
+  buzzer.buzz("beep beeeeep"); // nonblocking beep
 }
 
 void errorCellUndervoltage() {
@@ -193,16 +207,16 @@ void enableBusses(uint8_t bitmask) {
   }
   if (bitmask & CORE_ENABLE_BIT) {
     coreEnabled = true;
-    digitalWrite(CORE_ENABLE_BIT, HIGH);
+    digitalWrite(CORE_ENABLE_PIN, HIGH);
   }
   if (bitmask & AUX_ENABLE_BIT) {
     auxEnabled = true;
-    digitalWrite(AUX_ENABLE_BIT, HIGH);
+    digitalWrite(AUX_ENABLE_PIN, HIGH);
   }
   if (bitmask & NETWORK_ENABLE_BIT) {
     networkEnabled = true;
-    digitalWrite(NETWORK_ENABLE_BIT, LOW); // active low
-    digitalWrite(NETWORK_ENABLE_BIT, LOW);
+    digitalWrite(POE_ENABLE_PIN, LOW); // active low
+    digitalWrite(NS_ENABLE_PIN, LOW);
   }
 }
 
@@ -213,15 +227,15 @@ void disableBusses(uint8_t bitmask) {
   }
   if (bitmask & CORE_ENABLE_BIT) {
     coreEnabled = false;
-    digitalWrite(CORE_ENABLE_BIT, LOW);
+    digitalWrite(CORE_ENABLE_PIN, LOW);
   }
   if (bitmask & AUX_ENABLE_BIT) {
     auxEnabled = false;
-    digitalWrite(AUX_ENABLE_BIT, LOW);
+    digitalWrite(AUX_ENABLE_PIN, LOW);
   }
   if (bitmask & NETWORK_ENABLE_BIT) {
     networkEnabled = false;
-    digitalWrite(NETWORK_ENABLE_BIT, HIGH); // active low
-    digitalWrite(NETWORK_ENABLE_BIT, HIGH);
+    digitalWrite(POE_ENABLE_PIN, HIGH); // active low
+    digitalWrite(NS_ENABLE_PIN, HIGH);
   }
 }
