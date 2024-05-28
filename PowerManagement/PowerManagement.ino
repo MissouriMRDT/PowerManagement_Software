@@ -201,22 +201,26 @@ void errorCellCritical() {
 }
 
 void enableBusses(uint8_t bitmask) {
-  if (bitmask & MOTOR_ENABLE_BIT) {
-    motorEnabled = true;
-    digitalWrite(MOTOR_ENABLE_PIN, HIGH);
-  }
-  if (bitmask & CORE_ENABLE_BIT) {
-    coreEnabled = true;
-    digitalWrite(CORE_ENABLE_PIN, HIGH);
-  }
-  if (bitmask & AUX_ENABLE_BIT) {
-    auxEnabled = true;
-    digitalWrite(AUX_ENABLE_PIN, HIGH);
-  }
   if (bitmask & NETWORK_ENABLE_BIT) {
     networkEnabled = true;
     digitalWrite(POE_ENABLE_PIN, LOW); // active low
     digitalWrite(NS_ENABLE_PIN, LOW);
+    delay(500); // prevent current spikes
+  }
+  if (bitmask & CORE_ENABLE_BIT) {
+    coreEnabled = true;
+    digitalWrite(CORE_ENABLE_PIN, HIGH);
+    delay(500);
+  }
+  if (bitmask & MOTOR_ENABLE_BIT) {
+    motorEnabled = true;
+    digitalWrite(MOTOR_ENABLE_PIN, HIGH);
+    delay(500);
+  }
+  if (bitmask & AUX_ENABLE_BIT) {
+    auxEnabled = true;
+    digitalWrite(AUX_ENABLE_PIN, HIGH);
+    delay(500);
   }
 }
 
