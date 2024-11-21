@@ -60,8 +60,7 @@ void telemetry();
 
 // RoveComm
 RoveCommEthernet RoveComm;
-rovecomm_packet packet;
-EthernetServer TCPServer(RC_ROVECOMM_ETHERNET_TCP_PORT);
+RoveCommPacket packet;
 
 float cellVoltages[NUM_CELLS] = {0};
 float packVoltage = 0;

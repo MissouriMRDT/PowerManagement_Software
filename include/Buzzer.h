@@ -8,27 +8,27 @@
 
 class Buzzer {
 public:
-  // Constructor
-  Buzzer(uint8_t ctlPin): m_ctlPin(ctlPin) {}
-  
-  // call in setup()
-  void init();
-  // call in loop()
-  void update();
+    // Constructor
+    Buzzer(uint8_t ctlPin) : m_ctlPin(ctlPin) {}
 
-  // Member functions
-  void buzz(const String &pattern);
+    // call in setup()
+    void init();
+    // call in loop()
+    void update();
+
+    // Member functions
+    void buzz(const String &pattern);
 
 private:
-  // Member variables
-  uint8_t m_ctlPin;
+    // Member variables
+    uint8_t m_ctlPin;
 
-  // bool m_buzzing = false;
-  uint32_t m_beginActionTimestamp = 0;
-  uint32_t m_nextActionTimestamp = 0;
-  size_t m_position = 0;
+    // bool m_buzzing = false;
+    uint32_t m_beginActionTimestamp = 0;
+    uint32_t m_nextActionTimestamp = 0;
+    size_t m_position = 0;
 
-  String m_currentBuzzPattern = "";
+    String m_currentBuzzPattern = "";
 };
 
 #endif
