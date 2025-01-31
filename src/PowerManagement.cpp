@@ -31,10 +31,13 @@ void setup() {
 void loop() {
     // Read voltage and current from battery
     readCells();
-    packCurrent = analogMap(analogRead(PACK_I_SENSE_PIN), PACK_I_SENSE_ADC_MIN, PACK_I_SENSE_ADC_MAX,
+    packCurrent = analogMap(analogRead(PACK_I_SENSE_PIN),
+                            PACK_I_SENSE_ADC_MIN, PACK_I_SENSE_ADC_MAX,
                             PACK_I_SENSE_REAL_MIN, PACK_I_SENSE_REAL_MAX);
-    auxCurrent = analogMap(analogRead(AUX_I_SENSE_PIN), AUX_I_SENSE_ADC_MIN, AUX_I_SENSE_ADC_MAX, AUX_I_SENSE_REAL_MIN,
-                           AUX_I_SENSE_REAL_MAX);
+
+    auxCurrent = analogMap(analogRead(AUX_I_SENSE_PIN),
+                            AUX_I_SENSE_ADC_MIN, AUX_I_SENSE_ADC_MAX,
+                            AUX_I_SENSE_REAL_MIN, AUX_I_SENSE_REAL_MAX);
 
     // Check for critical cells
     for (uint8_t i = 0; i < NUM_CELLS; i++) {
@@ -105,8 +108,11 @@ void telemetry() {
     RoveComm.write(RC_PMSBOARD_AUXCURRENT_DATA_ID, auxCurrent);
     RoveComm.write(RC_PMSBOARD_MISCCURRENT_DATA_ID, RC_PMSBOARD_MISCCURRENT_DATA_COUNT, miscCurrents);
 
-    uint8_t busStatus = (motorEnabled ? MOTOR_ENABLE_BIT : 0) | (coreEnabled ? CORE_ENABLE_BIT : 0) |
-                        (auxEnabled ? AUX_ENABLE_BIT : 0) | (networkEnabled ? NETWORK_ENABLE_BIT : 0);
+    uint8_t busStatus = (motorEnabled ? MOTOR_ENABLE_BIT : 0) |
+                        (coreEnabled  ? CORE_ENABLE_BIT  : 0) |
+                        (auxEnabled   ? AUX_ENABLE_BIT   : 0) |
+                        (networkEnabled ? NETWORK_ENABLE_BIT : 0);
+
     RoveComm.write(RC_PMSBOARD_BUSSTATUS_DATA_ID, busStatus);
 }
 
@@ -121,8 +127,9 @@ void readCells() {
     for (uint16_t j = 0; j < NUM_VOLTAGE_READINGS; j++) {
         for (uint8_t i = 0; i < NUM_CELLS; i++) {
             uint16_t measurement = analogRead(CELL_V_SENSE_PINS[i]);
-            float newVoltage = analogMap(measurement, CELL_V_SENSE_ADC_MIN, CELL_V_SENSE_ADC_MAX, CELL_V_SENSE_REAL_MIN,
-                                         CELL_V_SENSE_REAL_MAX);
+            float newVoltage = analogMap(measurement,
+                                        CELL_V_SENSE_ADC_MIN, CELL_V_SENSE_ADC_MAX,
+                                        CELL_V_SENSE_REAL_MIN, CELL_V_SENSE_REAL_MAX);
             if (j == 0 || cellVoltages[i] < newVoltage) {
                 cellVoltages[i] = newVoltage;
             }
@@ -171,26 +178,24 @@ void roverRestart() {
     enableBusses(NETWORK_ENABLE_BIT | MOTOR_ENABLE_BIT | CORE_ENABLE_BIT | AUX_ENABLE_BIT);
 }
 
-uint8_t dummy = 0;
-
 void errorPackOvercurrent() {
-    RoveComm.writeReliable(RC_PMSBOARD_PACKOVERCURRENT_DATA_ID, dummy);
+    RoveComm.write(RC_PMSBOARD_PACKOVERCURRENT_DATA_ID, (uint8_t)0);
     roverEStop();
 }
 
 void errorAuxOvercurrent() {
-    RoveComm.writeReliable(RC_PMSBOARD_AUXOVERCURRENT_DATA_ID, dummy);
+    RoveComm.write(RC_PMSBOARD_AUXOVERCURRENT_DATA_ID, (uint8_t)0);
     disableBusses(AUX_ENABLE_BIT); // disable Aux
     buzzer.buzz("beep beeeeep");   // nonblocking beep
 }
 
 void errorCellUndervoltage() {
-    RoveComm.writeReliable(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, dummy);
+    RoveComm.write(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, (uint8_t)0);
     roverEStop();
 }
 
 void errorCellCritical() {
-    RoveComm.writeReliable(RC_PMSBOARD_CELLCRITICAL_DATA_ID, dummy);
+    RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, (uint8_t)0);
     roverSuicide();
 }
 
