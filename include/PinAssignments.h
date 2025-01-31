@@ -1,0 +1,24 @@
+#ifndef PIN_ASSIGNMENTS_H
+#define PIN_ASSIGNMENTS_H
+
+#define POE_ENABLE_PIN 0
+#define NS_ENABLE_PIN 1 
+
+
+#define CURRENT_SENSE_PIN 14
+#define CELL_SENSE_1_PIN 15
+#define CELL_SENSE_2_PIN 16
+#define CELL_SENSE_3_PIN 17
+#define CELL_SENSE_4_PIN 18
+#define CELL_SENSE_5_PIN 19
+#define CELL_SENSE_6_PIN 20
+#define TEMP_SENSE_PIN 21
+
+
+#define AUX_ENABLE_PIN 6
+#define LOW_CURRENT_ENABLE_PIN 9
+#define MOTOR_ENABLE_PIN 32
+
+#define BUZZER_PIN 39
+
+#endif
