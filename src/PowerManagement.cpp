@@ -17,7 +17,7 @@ void setup() {
   pinMode(AUX_ENABLE_PIN, OUTPUT);
 
   // turn everything on
-  enableBusses(NETWORK_ENABLE_BIT | MOTOR_ENABLE_BIT | LOW_CURRENT_ENABLE_PIN | AUX_ENABLE_BIT);
+  enableBusses(NETWORK_ENABLE_BIT | MOTOR_ENABLE_BIT | CORE_ENABLE_BIT | AUX_ENABLE_BIT);
 
   // RoveComm
   Serial.println("RoveComm Initializing...");
@@ -48,10 +48,17 @@ void loop() {
       errorCellUndervoltage();
     }
   }
-  //Check for overcurrent
+  // Check for overcurrent
+  // If it has been a long time since the last normal current value, it is likely not a spike]
+  uint32_t now = millis();
   if (packCurrent >= MAX_PACK_CURRENT) {
-    errorPackOvercurrent();
+    if (now - packCurrentTimestamp >= MAX_CURRENT_SPIKE_DURATION) {
+      errorPackOvercurrent();
+    }
+  } else {
+    packCurrentTimestamp = now;
   }
+
   if (auxCurrent >= MAX_AUX_CURRENT) {
     errorAuxOvercurrent();
   }

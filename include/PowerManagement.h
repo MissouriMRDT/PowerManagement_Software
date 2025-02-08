@@ -58,6 +58,11 @@ float packCurrent = 0;
 float auxCurrent = 0;
 float miscCurrents[NUM_MISC_CURRENTS] = {0};
 
+// the last time in milliseconds that the current was at an acceptable level
+uint32_t packCurrentTimestamp = 0;
+// in milliseconds
+#define MAX_CURRENT_SPIKE_DURATION 100
+
 bool motorEnabled = false;
 bool coreEnabled = false;
 bool auxEnabled = false;
