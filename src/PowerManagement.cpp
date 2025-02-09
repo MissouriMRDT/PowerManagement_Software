@@ -26,15 +26,14 @@ void setup() {
 
   // Telemetry
   Telemetry.begin(telemetry, TELEMETRY_PERIOD);
-  
+
   buzzer.init();
 }
 
-
 void loop() {
   // Read voltage and current from battery
-  readCells();
-  packCurrent = analogMap(analogRead(CURRENT_SENSE_PIN), PACK_I_SENSE_ADC_MIN, PACK_I_SENSE_ADC_MAX, PACK_I_SENSE_REAL_MIN, PACK_I_SENSE_REAL_MAX);
+  readCellVoltages();
+  readPackCurrent();
 
   // Check for critical cells
   for (uint8_t i = 0; i < NUM_CELLS; i++) {
@@ -52,11 +51,11 @@ void loop() {
   // If it has been a long time since the last normal current value, it is likely not a spike]
   uint32_t now = millis();
   if (packCurrent >= MAX_PACK_CURRENT) {
-    if (now - packCurrentTimestamp >= MAX_CURRENT_SPIKE_DURATION) {
+    if (now - lastAcceptableCurrentTimestamp >= ALLOWABLE_OVERCURRENT_PERIOD) {
       errorPackOvercurrent();
     }
   } else {
-    packCurrentTimestamp = now;
+    lastAcceptableCurrentTimestamp = now;
   }
 
   if (auxCurrent >= MAX_AUX_CURRENT) {
@@ -128,13 +127,13 @@ float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fr
   return (measurement - fromADC) * slope + fromAnalog;
 }
 
-void readCells() {
+void readCellVoltages() {
   // Repeatedly read the voltage of all cells
   // To eliminate voltage drops from current spikes, store the largest value into the cellVoltages array
   for (uint16_t j = 0; j < NUM_VOLTAGE_READINGS; j++) {
     for (uint8_t i = 0; i < NUM_CELLS; i++) {
       uint16_t measurement = analogRead(CELL_V_SENSE_PINS[i]);
-      float newVoltage = analogMap(measurement, CELL_V_SENSE_ADC_MIN, CELL_V_SENSE_ADC_MAX, CELL_V_SENSE_REAL_MIN, CELL_V_SENSE_REAL_MAX);
+      float newVoltage = analogMap(measurement, CELL_V_SENSE_ADC_ZERO, CELL_V_SENSE_ADC_OTHER, CELL_V_SENSE_REAL_ZERO, CELL_V_SENSE_REAL_OTHER);
       if (j == 0 || cellVoltages[i] < newVoltage) {
         cellVoltages[i] = newVoltage;
       }
@@ -147,6 +146,11 @@ void readCells() {
     pv += cellVoltages[i];
   }
   packVoltage = pv;
+}
+
+void readPackCurrent() {
+  uint16_t measurement = analogRead(CURRENT_SENSE_PIN);
+  packCurrent = analogMap(measurement, PACK_I_SENSE_ADC_ZERO, PACK_I_SENSE_ADC_OTHER, PACK_I_SENSE_REAL_ZERO, PACK_I_SENSE_REAL_OTHER);
 }
 
 void roverEStop() {

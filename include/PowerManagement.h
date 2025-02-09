@@ -10,25 +10,24 @@
 const int CELL_V_SENSE_PINS[] = {CELL_SENSE_1_PIN, CELL_SENSE_2_PIN, CELL_SENSE_3_PIN, CELL_SENSE_4_PIN, CELL_SENSE_5_PIN, CELL_SENSE_6_PIN};
 
 // Current conversion factor (PACK CURRENT)
-//(512 .. 1023) -> (0 .. 200)
-#define PACK_I_SENSE_ADC_MIN 506 // this should be 512 ideally, but experimentally 0 corresponded with 506
-#define PACK_I_SENSE_ADC_MAX 1023
-#define PACK_I_SENSE_REAL_MIN 0.0
-#define PACK_I_SENSE_REAL_MAX 200.0
+//(512 .. 885) -> (0 .. 45)
+#define PACK_I_SENSE_ADC_ZERO 512
+#define PACK_I_SENSE_ADC_OTHER 885
+#define PACK_I_SENSE_REAL_ZERO 0.0
+#define PACK_I_SENSE_REAL_OTHER 45.0
 
 // Cell voltage conversion factor
 //(0 .. 1023) -> (0 .. 4.2)
-#define CELL_V_SENSE_ADC_MIN 0
-#define CELL_V_SENSE_ADC_MAX 1023
-#define CELL_V_SENSE_REAL_MIN 0.0
-#define CELL_V_SENSE_REAL_MAX 4.2
+#define CELL_V_SENSE_ADC_ZERO 0
+#define CELL_V_SENSE_ADC_OTHER 1023
+#define CELL_V_SENSE_REAL_ZERO 0.0
+#define CELL_V_SENSE_REAL_OTHER 4.2
 
 ////////////////////////////////////////////////////////////////////////////////////////
 
 // Important constants
 #define NUM_CELLS 6
 #define NUM_VOLTAGE_READINGS 1000
-#define NUM_MISC_CURRENTS 3
 #define RESTART_DELAY 1000 // millis
 #define MAX_PACK_CURRENT 50 // Amps
 #define MAX_AUX_CURRENT 15 // Amps
@@ -55,13 +54,12 @@ RoveCommPacket packet;
 float cellVoltages[NUM_CELLS] = {0};
 float packVoltage = 0;
 float packCurrent = 0;
-float auxCurrent = 0;
-float miscCurrents[NUM_MISC_CURRENTS] = {0};
+float auxCurrent = 0; // not currently measured
 
-// the last time in milliseconds that the current was at an acceptable level
-uint32_t packCurrentTimestamp = 0;
 // in milliseconds
-#define MAX_CURRENT_SPIKE_DURATION 100
+#define ALLOWABLE_OVERCURRENT_PERIOD 100
+// the last time in milliseconds that the current was at an acceptable level
+uint32_t lastAcceptableCurrentTimestamp = 0;
 
 bool motorEnabled = false;
 bool coreEnabled = false;
@@ -72,7 +70,8 @@ Buzzer buzzer(BUZZER_PIN); // unused for now
 
 // Function Declarations ///////////////////////////////////////////////////////////
 
-void readCells();
+void readCellVoltages();
+void readPackCurrent();
 // map a teensy analogRead() measurement to a range of floats
 float analogMap(uint16_t measurement, uint16_t fromADC, uint16_t toADC, float fromAnalog, float toAnalog);
 
