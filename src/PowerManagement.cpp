@@ -206,7 +206,8 @@ void errorCellUndervoltage() {
 
 void errorCellCritical() {
   RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, dummy);
-  roverSuicide();
+  delay(1000); // wait a second for the message to send before killing the network switch
+  // roverSuicide();
 }
 
 void enableBusses(uint8_t bitmask) {
