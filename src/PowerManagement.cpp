@@ -16,4 +16,10 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  
+  
+}
+
+float PMSmap(float startVal, float fromMin, float fromMax, float toMin, float toMax) {
+  
 }
