@@ -23,17 +23,18 @@
 #define LC_CURRENT_SENSE_PIN 19
 
 //LCD pins
-#define LCD_RS 21
-#define LCD_RW 22
-#define LCD_EN 3
-#define LCD_D0 2
-#define LCD_D1 1
-#define LCD_D2 39
-#define LCD_D3 38
-#define LCD_D4 37
-#define LCD_D5 36
-#define LCD_D6 35
-#define LCD_D7 34
+#define LCD_RS_PIN 21
+#define LCD_RW_PIN 22
+#define LCD_EN_PIN 3
+#define LCD_D1_PIN 1
+#define LCD_D0_PIN 2
+#define LCD_D2_PIN 39
+#define LCD_D3_PIN 38
+#define LCD_D4_PIN 37
+#define LCD_D5_PIN 36
+#define LCD_D6_PIN 35
+#define LCD_D7_PIN 34
+
 
 //Buzzer Pin
 #define BUZZER_PIN 23
