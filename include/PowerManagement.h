@@ -16,6 +16,7 @@ float cellVoltages[6] = {0};
 
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;
+float auxCurrent = 0.0f;
 
 #define MOTOR_ENABLE_BIT (1 << 0)
 #define LC_ENABLE_BIT (1 << 1)
@@ -29,6 +30,9 @@ bool lowCurrentEnabled = false;
 bool auxEnabled = false;
 bool nsEnabled = false;
 
+//time variables
+uint32_t lastAcceptableTimePackCurrent = 0;
+uint32_t lastAcceptableTimeAuxCurrent = 0;
 
 /**
  * @note map pin vals to real-world vals
@@ -45,11 +49,12 @@ void disableBusses(uint8_t data);
 
 void errorPackOvercurrent();
 void errorAuxOvercurrent();
-void errorCellOverVoltage();
+void errorCellUnderVoltage();
 void errorCellCritical();
 
 void readCellVoltage();
 void readPackVotlage();
 void readPackCurrent();
+void readAuxCurrent();
 
 void telemetry();
