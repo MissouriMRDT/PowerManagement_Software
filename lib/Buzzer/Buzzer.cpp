@@ -8,13 +8,18 @@ public:
         digitalWrite(buzzerPin, LOW);
     };
     void update() {
+
+    }
+    void buzz(String BuzzPattern) {
         
     }
+
     
 private:
     int buzzerPin = 0;
     uint32_t beginActionTimestamp = 0;
     uint32_t nextActionTImestamp = 0;
     size_t position = 0;
+    
 
 };

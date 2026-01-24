@@ -17,6 +17,11 @@ float cellVoltages[6] = {0};
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;
 float auxCurrent = 0.0f;
+float nsCurrent = 0.0f;
+float m9Current = 0.0f;
+float m2Current = 0.0f;
+float lcCurrent = 0.0f;
+
 
 #define MOTOR_ENABLE_BIT (1 << 0)
 #define LC_ENABLE_BIT (1 << 1)

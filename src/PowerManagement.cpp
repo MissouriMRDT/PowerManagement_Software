@@ -33,17 +33,21 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
+  //update current values
   readCellVoltages();
   readPackCurrent();
   readPackVotlage();
   readAuxCurrent();
+  readLCCurrent();
+  readM2Current();
+  readM9Current();
+  readNSCurrent();
 
   for (int i = 0; i < 6; i++) {
     if (cellVoltages[i] < 2.7) {
       errorCellCritical();
     } 
   }
-  readPackVotlage();
   if (packVoltage < 18) {
     suicide();
   }
@@ -91,12 +95,32 @@ void loop() {
       disableBusses(~data);
       break;
   }
-
+  LCD.write("Pack Current: ");
+  LCD.setCursor(0,1);
+  LCD.write(packCurrent);
 }
 
-float PMSmap(uint16_t measured, uint16_t toADC, uint16_t fromADC, float toAnalog, float fromAnalog) {
-  float m = (toAnalog - fromAnalog) / (toADC - fromADC);
-  return (measured - fromADC) * m + fromAnalog;
+float LCMap(uint16_t measured) {
+  //y=0.0418x + 1.6522
+
+  return ((0.0418*measured)+1.6522);
+}
+float PackMap(uint16_t measured) {
+  //y = 0.0258x + 0.3261
+  return ((0.0258*measured) + 0.3261);
+}
+float AuxMap(uint16_t measured) {
+//Y = 0.0431x + 1 6528
+  return ((0.0431*measured)+1.6528);
+}
+float POEMap(uint16_t measured) {
+//y = 0.0462x + 1.6507
+  return ((measured * 0.0462) + 1.6507);
+}
+
+float NSMap(uint16_t measured) {
+//y = 0.0467x + 1.6511
+  return ((measured * 0.0467) + 1.6511);
 }
 
 void readCellVoltages() {
@@ -198,12 +222,32 @@ void suicide() {
 
 void readPackCurrent() {
   float measure = analogRead(PACK_CURRENT_SENSE_PIN);
-  packCurrent = PMSmap(measure, 0, 1023, 0, 100);
+  packCurrent = PackMap(measure);
 }
 
 void readAuxCurrent() {
   float measure = analogRead(AUX_CURRENT_SENSE_PIN);
-  auxCurrent = PMSmap(measure, 0, 1023, 0, 15);
+  auxCurrent = AuxMap(measure);
+}
+
+void readNSCurrent() {
+  float measure = analogRead(NS_CURRENT_SENSE_PIN);
+  nsCurrent = NSMap(measure);
+}
+
+void readLCCurrent() {
+  float measure = analogRead(LC_CURRENT_SENSE_PIN);
+  lcCurrent = LCMap(measure);
+}
+
+void readM9Current() {
+  float measure = analogRead(M9_CURRENT_SENSE_PIN);
+  m9Current = POEMap(measure);
+}
+
+void readM2Current() {
+  float measure = analogRead(M2_CURRENT_SENSE_PIN);
+  m9Current = POEMap(measure);
 }
 
 /**
