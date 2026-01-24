@@ -26,6 +26,9 @@ void setup() {
   //initialize LCD
   LCD.begin(20,4);
 
+  //initialize buzzer
+  buzzer.init();
+
   //start up rovecomm
   RoveComm.begin(RC_PMSBOARD_IPADDRESS);
   
@@ -98,6 +101,7 @@ void loop() {
   LCD.write("Pack Current: ");
   LCD.setCursor(0,1);
   LCD.write(packCurrent);
+  buzzer.update();
 }
 
 float LCMap(uint16_t measured) {
@@ -209,6 +213,7 @@ void restart() {
  */
 void eStop() {
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT);
+  buzzer.buzz("beeeeep");
   //ring buzzer here
 }
 
@@ -217,6 +222,7 @@ void eStop() {
  */
 void suicide() {
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  buzzer.buzz("bEEEEEEEp===bEEEEp");
   //buzz infinitely
 }
 

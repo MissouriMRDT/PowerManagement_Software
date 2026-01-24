@@ -1,10 +1,12 @@
 #include <RoveComm.h>
 #include "PinAssignments.h"
+#include "Buzzer.h"
 
 //define rovecomm
 RoveCommEthernet RoveComm;
 RoveCommPacket packet;
 
+Buzzer buzzer(BUZZER_PIN);
 //Constants
 #define NUM_CELLS 6
 
