@@ -21,6 +21,10 @@ void setup() {
   pinMode(M9_ENABLE, OUTPUT);
   pinMode(NS_ENABLE, OUTPUT);
   pinMode(AUX_ENABLE, OUTPUT);
+
+  //turn everything on
+  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+
   //initialization code
 
   //initialize LCD
@@ -29,8 +33,12 @@ void setup() {
   //initialize buzzer
   buzzer.init();
 
+  telemetryRunner.begin(telemetry, TELEMETRY_PERIOD);
+
   //start up rovecomm
+  Serial.println("Starting rovecomm...");
   RoveComm.begin(RC_PMSBOARD_IPADDRESS);
+  Serial.println("Rovecomm has been initialized.");
   
 }
 
@@ -107,7 +115,6 @@ void loop() {
 
 float LCMap(uint16_t measured) {
   //y=0.0418x + 1.6522
-
   return ((0.0418*measured)+1.6522);
 }
 float PackMap(uint16_t measured) {
@@ -165,6 +172,16 @@ void enableBusses(uint8_t data) {
     auxEnabled = true;
     delay(500);
   }
+  if (data & M2_ENABLE_BIT) {
+    digitalWrite(M2_ENABLE, HIGH);
+    m2Enabled = true;
+    delay(500);
+  }
+  if (data & M9_ENABLE_BIT) {
+    digitalWrite(M9_ENABLE, HIGH);
+    m9Enabled = true;
+    delay(500);
+  }
   if (data & NETWORK_ENABLE_BIT) {
     digitalWrite(NS_ENABLE, HIGH);
     nsEnabled = true;
@@ -188,6 +205,16 @@ void disableBusses(uint8_t data) {
   if (data & AUX_ENABLE_BIT) {
     digitalWrite(AUX_ENABLE, LOW);
     auxEnabled = false;
+    delay(500);
+  }
+  if (data & M2_ENABLE_BIT) {
+    digitalWrite(M2_ENABLE, LOW);
+    m2Enabled = false;
+    delay(500);
+  }
+  if (data & M9_ENABLE_BIT) {
+    digitalWrite(M9_ENABLE, LOW);
+    m9Enabled = false;
     delay(500);
   }
   if (data & NETWORK_ENABLE_BIT) {
@@ -269,6 +296,8 @@ void telemetry() {
     (motorEnabled ? MOTOR_ENABLE_BIT : 0) |
     (lowCurrentEnabled ? LC_ENABLE_BIT : 0) |
     (auxEnabled ? AUX_ENABLE_BIT : 0) |
+    (m2Enabled ? M2_ENABLE_BIT : 0) | 
+    (m9Enabled ? M9_ENABLE_BIT : 0) |
     (nsEnabled ? NETWORK_ENABLE_BIT : 0);
   RoveComm.write(RC_PMSBOARD_BUSSTATUS_DATA_ID,busStatuses);
 }
