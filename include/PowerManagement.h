@@ -15,7 +15,7 @@ Buzzer buzzer(BUZZER_PIN);
 int cellPins[6] = {CELL_SENSE_1_PIN, CELL_SENSE_2_PIN,CELL_SENSE_3_PIN, CELL_SENSE_4_PIN, CELL_SENSE_5_PIN, CELL_SENSE_6_PIN};
 float cellVoltages[6] = {0};
   
-  
+
   
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;
@@ -52,12 +52,10 @@ uint32_t lastAcceptableTimeAuxCurrent = 0;
 IntervalTimer telemetryRunner;
 void telemetry();
 
-/**
- * @note map pin vals to real-world vals
- */
-float PMSmap(float startVal, float fromMin, float fromMax, float toMin, float toMax);
 
 
+
+//function headers
 void suicide();
 void eStop();
 void restart();
@@ -75,4 +73,15 @@ void readPackVotlage();
 void readPackCurrent();
 void readAuxCurrent();
 
+
+void readPackCurrent();
+void readAuxCurrent();
+void readNSCurrent();
+void readLCCurrent();
+void readM9Current();
+void readM2Current();
+void readCellVoltages();
+
 void telemetry();
+float map_float(float x, float in_min, float in_max, float out_min, float out_max);
+float mapCellVoltage(float measured);

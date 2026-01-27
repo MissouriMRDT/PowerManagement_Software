@@ -96,14 +96,18 @@ void loop() {
       enableBusses(((uint8_t*)packet.data)[0]);
       break;
     case RC_PMSBOARD_DISABLEBUS_DATA_ID:
+    {  
       uint8_t data = ((uint8_t*)packet.data)[0] & ~NETWORK_ENABLE_BIT;
       disableBusses(data);
       break;
+    }
     case RC_PMSBOARD_SETBUS_DATA_ID:
+    {
       uint8_t data = ((uint8_t*)packet.data)[0] | NETWORK_ENABLE_BIT; // make sure network switch is also enabled
       enableBusses(data);
       disableBusses(~data);
       break;
+    }
   }
   LCD.write("BattVolts: " );
   LCD.write(packVoltage);
@@ -138,7 +142,7 @@ float NSMap(uint16_t measured) {
 void readCellVoltages() {
   for (int i = 0; i < NUM_CELLS; i++) {
     for (int j = 0; j < 1000; j++) {
-      float newVoltage = PMSmap((uint16_t) analogRead(cellPins[i]), 0, 1023, 0, 4.2); //how do I get full range of voltage
+      float newVoltage = mapCellVoltage((uint16_t) analogRead(cellPins[i])); //how do I get full range of voltage
       if (j == 0 || cellVoltages[i] < newVoltage) {
         cellVoltages[i] = newVoltage;
       }
@@ -282,6 +286,23 @@ void readM9Current() {
 void readM2Current() {
   float measure = analogRead(M2_CURRENT_SENSE_PIN);
   m9Current = POEMap(measure);
+}
+
+/*
+long map(long x, long in_min, long in_max, long out_min, long out_max)
+{
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}*/
+
+float map_float(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+float mapCellVoltage(float measured) {
+  // float slope = 1023 / 4.2;
+  
+  // return (slope * measured);
+  return map_float(measured, 0, 1023, 0, 4.2);
 }
 
 /**
