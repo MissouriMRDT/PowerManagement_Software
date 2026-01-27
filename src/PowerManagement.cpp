@@ -35,7 +35,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
   //update current values
   readCellVoltages();
   readPackCurrent();
@@ -259,10 +258,11 @@ void readM2Current() {
 /**
  * @note Send data to rovecom
  */
-void telemetry() {
-  RoveComm.write(RC_PMSBOARD_CELLVOLTAGE_DATA_ID,RC_PMSBOARD_CELLVOLTAGE_DATA_COUNT,cellVoltages);
-  RoveComm.write(RC_PMSBOARD_PACKVOLTAGE_DATA_ID, packVoltage);
-  RoveComm.write(RC_PMSBOARD_PACKCURRENT_DATA_ID, packCurrent);
+void telemetry() {  
+  for (int i = 0; i < NUM_CELLS; ++i) {
+    telemArray[6 + i] = cellVoltages[i];
+  }
+  RoveComm.write(RC_PMSBOARD_CURRENTANDVOLTAGE_DATA_ID,RC_PMSBOARD_CURRENTANDVOLTAGE_DATA_COUNT,telemArray);
   uint8_t busStatuses =
     (motorEnabled ? MOTOR_ENABLE_BIT : 0) |
     (lowCurrentEnabled ? LC_ENABLE_BIT : 0) |
