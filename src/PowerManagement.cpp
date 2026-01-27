@@ -97,8 +97,10 @@ void loop() {
       disableBusses(~data);
       break;
   }
-  LCD.write("Pack Current: ");
+  LCD.write("BattVolts: " );
+  LCD.write(packVoltage);
   LCD.setCursor(0,1);
+  LCD.write("BattCurr: ");
   LCD.write(packCurrent);
   buzzer.update();
 }
