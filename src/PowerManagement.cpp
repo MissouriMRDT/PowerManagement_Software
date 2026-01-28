@@ -232,11 +232,11 @@ void disableBusses(uint8_t data) {
  * @note Turns off all systems for 1 second
  */
 void restart() {
-  disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
   //buzz on
   delay(1000);
   //buzz off
-  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
 
 }
 
@@ -253,8 +253,12 @@ void eStop() {
  * @note Turns off all systems
  */
 void suicide() {
-  disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT);
-  buzzer.buzz("bEEEEEEEp===bEEEEp");
+  disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
+  buzzer.buzz("bEEEp===u");
+  while (1) {
+    buzzer.update();
+    delay(10);
+  }
   //buzz infinitely
 }
 
@@ -308,9 +312,16 @@ float mapCellVoltage(float measured) {
 /**
  * @note Send data to rovecom
  */
-void telemetry() {  
+void telemetry() {
+  uint8_t index = 0;
+  telemArray[index++] = packCurrent;
+  telemArray[index++] = auxCurrent;
+  telemArray[index++] = lcCurrent;
+  telemArray[index++] = nsCurrent;
+  telemArray[index++] = m2Current;
+  telemArray[index++] = m9Current;
   for (int i = 0; i < NUM_CELLS; ++i) {
-    telemArray[6 + i] = cellVoltages[i];
+    telemArray[index++] = cellVoltages[i];
   }
   RoveComm.write(RC_PMSBOARD_CURRENTANDVOLTAGE_DATA_ID,RC_PMSBOARD_CURRENTANDVOLTAGE_DATA_COUNT,telemArray);
   uint8_t busStatuses =
