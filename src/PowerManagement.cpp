@@ -213,7 +213,7 @@ void readPackVotlage() {
 }
 
 /**
- * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS
+ * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS, M2, M9
  */
 void enableBusses(uint8_t data) {
   if (data & MOTOR_ENABLE_BIT) {
@@ -248,38 +248,32 @@ void enableBusses(uint8_t data) {
   }
 }
 /**
- * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS
+ * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS, M2, M9
  */
 void disableBusses(uint8_t data) {
   if (data & MOTOR_ENABLE_BIT) {
     digitalWrite(Motor_ENABLE, LOW);
     motorEnabled = false;
-    delay(500);
   }
   if (data & LC_ENABLE_BIT) {
     digitalWrite(LC_ENABLE, LOW);
     lowCurrentEnabled = false;
-    delay(500);
   }
   if (data & AUX_ENABLE_BIT) {
     digitalWrite(AUX_ENABLE, LOW);
     auxEnabled = false;
-    delay(500);
-  }
-  if (data & M2_ENABLE_BIT) {
-    digitalWrite(M2_ENABLE, LOW);
-    m2Enabled = false;
-    delay(500);
-  }
-  if (data & M9_ENABLE_BIT) {
-    digitalWrite(M9_ENABLE, LOW);
-    m9Enabled = false;
-    delay(500);
   }
   if (data & NETWORK_ENABLE_BIT) {
     digitalWrite(NS_ENABLE, LOW);
     nsEnabled = false;
-    delay(500);
+  }
+  if (data & M2_ENABLE_BIT) {
+    digitalWrite(M2_ENABLE, LOW);
+    m2Enabled = false;
+  }
+  if (data & M9_ENABLE_BIT) {
+    digitalWrite(M9_ENABLE, LOW);
+    m9Enabled = false;
   }
 }
 
