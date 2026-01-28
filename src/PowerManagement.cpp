@@ -53,6 +53,31 @@ void loop() {
   readM9Current();
   readNSCurrent();
 
+  Serial.print("BattVolts: ");
+  Serial.println(packVoltage);
+  Serial.println("Cell Voltages: ");
+  for(int i = 0; i < NUM_CELLS; i++) {
+    Serial.print("Cell ");
+    Serial.print(i);
+    Serial.print(": ");
+    Serial.println(cellVoltages[i]);
+  }
+
+  Serial.print("Battery Current: ");
+  Serial.println(packCurrent);
+  Serial.println("Ports Current: ");
+  Serial.print("Network switch: ");
+  Serial.println(nsCurrent);
+  Serial.print("Low current: ");
+  Serial.println(lcCurrent);
+  Serial.println("Aux: ");
+  Serial.println(auxCurrent);
+  Serial.println("M9: ");
+  Serial.println(m9Current);
+  Serial.println("M2: ");
+  Serial.println(m2Current);
+
+  
   for (int i = 0; i < 6; i++) {
     if (cellVoltages[i] < 2.7) {
       errorCellCritical();
@@ -117,26 +142,56 @@ void loop() {
   buzzer.update();
 }
 
+/*
+ * Mapping functions derived from current sensor calibration data. See sharepoint:
+ * 2026 -> Arch Electrical -> Documentation -> Core -> Power Management System -> PMS Current Calibration
+ */
 float LCMap(uint16_t measured) {
-  //y=0.0418x + 1.6522
-  return ((0.0418*measured)+1.6522);
+  // y = 23.925x - 39.528
+  float temp = (3.3 / 1023) * measured;
+  float output ((23.925 * temp) - 39.528);
+  if (output < 0) {
+      output = 0;
+  }
+  return output;
 }
 float PackMap(uint16_t measured) {
-  //y = 0.0258x + 0.3261
-  return ((0.0258*measured) + 0.3261);
+  // 38.765 - 12.637
+  float temp = (3.3 / 1023) * measured;
+  float output ((38.765 * temp) - 12.637);
+  if (output < 0) {
+      output = 0;
+  }
+  return output;
 }
 float AuxMap(uint16_t measured) {
-//Y = 0.0431x + 1 6528
-  return ((0.0431*measured)+1.6528);
+  // y = 23.214x - 38.369
+  float temp = (3.3 / 1023) * measured;
+  float output ((23.214 * temp) - 38.369);
+  if (output < 0) {
+      output = 0;
+  }
+  return output;
 }
 float POEMap(uint16_t measured) {
-//y = 0.0462x + 1.6507
-  return ((measured * 0.0462) + 1.6507);
+  // Uses equation from M9 testing
+  // y = 21.63x - 35.703
+  float temp = (3.3 / 1023) * measured;
+  float output = ((21.63 * temp) - 35.703);
+  if (output < 0) {
+      output = 0;
+  }
+  return output;
 }
 
 float NSMap(uint16_t measured) {
-//y = 0.0467x + 1.6511
-  return ((measured * 0.0467) + 1.6511);
+  // y = 21.378x - 35.296
+  float temp = (3.3 / 1023) * measured;
+  float output = ((21.378 * temp) - 35.296);
+  if (output < 0) {
+    output = 0;
+  }
+  return output;
 }
 
 void readCellVoltages() {
@@ -253,6 +308,7 @@ void eStop() {
  * @note Turns off all systems
  */
 void suicide() {
+  Serial.println("Suiciding!");
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
   buzzer.buzz("bEEEp===u");
   while (1) {
@@ -289,7 +345,7 @@ void readM9Current() {
 
 void readM2Current() {
   float measure = analogRead(M2_CURRENT_SENSE_PIN);
-  m9Current = POEMap(measure);
+  m2Current = POEMap(measure);
 }
 
 /*
@@ -336,18 +392,27 @@ void telemetry() {
 
 void errorPackOvercurrent() {
   RoveComm.write(RC_PMSBOARD_PACKOVERCURRENT_DATA_ID, dummy);
+  Serial.println("Error: Pack overcurrent");
   eStop();
 }
 void errorAuxOvercurrent() {
   RoveComm.write(RC_PMSBOARD_AUXOVERCURRENT_DATA_ID, dummy);
+  Serial.println("Error: Aux overcurrent");
+
+  float measure = analogRead(AUX_CURRENT_SENSE_PIN);
+  Serial.print("Aux current measured voltage: ");
+  Serial.println(measure);
+
   disableBusses(AUX_ENABLE_BIT);
   //buzzer start
 }
 void errorCellUnderVoltage() {
   RoveComm.write(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, dummy);
+  Serial.println("Error: Cell under voltage");
   eStop();
 }
 void errorCellCritical() {
   RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, dummy);
+  Serial.println("Error: Cell critical");
   delay(1000);
 }
