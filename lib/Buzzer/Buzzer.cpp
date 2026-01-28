@@ -7,7 +7,6 @@ void Buzzer::buzz(const String &pattern) {
   m_nextActionTimestamp = m_beginActionTimestamp;
   m_position = 0;
   analogWrite(m_ctlPin, 0);
-  analogWriteFrequency(m_ctlPin, 440.0f);
 }
 
 void Buzzer::update() {
@@ -17,6 +16,7 @@ void Buzzer::update() {
     if (m_position == m_currentBuzzPattern.length()) {
       m_currentBuzzPattern = "";
       analogWrite(m_ctlPin, 0);
+      m_buzzing = false;
       return;
     }
     m_beginActionTimestamp = millis();
@@ -24,6 +24,7 @@ void Buzzer::update() {
     switch (action) {
       case 'b':
         analogWrite(m_ctlPin, 127);
+        m_buzzing = true;
         break;
       case 'e':
         m_nextActionTimestamp = m_beginActionTimestamp + 100;
@@ -33,6 +34,7 @@ void Buzzer::update() {
         break;
       case 'p':
         analogWrite(m_ctlPin, 0);
+        m_buzzing = false;
         break;
       case ' ':
         m_nextActionTimestamp = m_beginActionTimestamp + 100;
@@ -51,7 +53,12 @@ void Buzzer::update() {
   }
 }
 
+bool Buzzer::isBuzzing() const {
+  return m_buzzing;
+}
+
 void Buzzer::init() {
   pinMode(m_ctlPin, OUTPUT);
   analogWrite(m_ctlPin, 0);
+  analogWriteFrequency(m_ctlPin, 440.0f);
 }

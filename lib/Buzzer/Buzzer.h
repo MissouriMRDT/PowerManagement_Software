@@ -19,11 +19,13 @@ public:
   // Member functions
   void buzz(const String &pattern);
 
+  bool isBuzzing() const;
+
 private:
   // Member variables
   uint8_t m_ctlPin;
 
-  // bool m_buzzing = false;
+  bool m_buzzing = false;
   uint32_t m_beginActionTimestamp = 0;
   uint32_t m_nextActionTimestamp = 0;
   size_t m_position = 0;

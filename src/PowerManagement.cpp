@@ -79,9 +79,11 @@ void loop() {
 
   
   for (int i = 0; i < 6; i++) {
-    if (cellVoltages[i] < 2.7) {
-      errorCellCritical();
-    } 
+    if (cellVoltages[i] < 2.8 && millis() - lastCellUndervoltage > 1000) {
+      errorCellUnderVoltage(1 << i);
+    } else if (cellVoltages[i] < 2.7) {
+      errorCellCritical(1 << i);
+    }
   }
   if (packVoltage < 18) {
     suicide();
@@ -282,20 +284,22 @@ void disableBusses(uint8_t data) {
  */
 void restart() {
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
-  //buzz on
-  delay(1000);
-  //buzz off
+  buzzer.buzz("beeeeep");
+  while (buzzer.isBuzzing()) {
+    buzzer.update();
+    delay(5);
+  }
+  buzzer.buzz("beeeeep");
   enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
-
 }
 
 /**
  * @note Turns off all systems except network
  */
 void eStop() {
+  Serial.println("EStopping!");
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT);
   buzzer.buzz("beeeeep");
-  //ring buzzer here
 }
 
 /**
@@ -304,12 +308,12 @@ void eStop() {
 void suicide() {
   Serial.println("Suiciding!");
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
-  buzzer.buzz("bEEEp===u");
-  while (1) {
-    buzzer.update();
-    delay(10);
-  }
   //buzz infinitely
+  buzzer.buzz("bEEEp===u");
+  while (buzzer.isBuzzing()) {
+    buzzer.update();
+    delay(5);
+  }
 }
 
 void readPackCurrent() {
@@ -396,17 +400,21 @@ void errorAuxOvercurrent() {
   float measure = analogRead(AUX_CURRENT_SENSE_PIN);
   Serial.print("Aux current measured voltage: ");
   Serial.println(measure);
-
+  buzzer.buzz("beeeeep");
   disableBusses(AUX_ENABLE_BIT);
   //buzzer start
 }
-void errorCellUnderVoltage() {
-  RoveComm.write(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, dummy);
+void errorCellUnderVoltage(uint8_t bitmask) {
+  RoveComm.write(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, bitmask);
   Serial.println("Error: Cell under voltage");
   eStop();
+  buzzer.buzz("beeeeep");
+  lastCellUndervoltage = millis();
 }
-void errorCellCritical() {
-  RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, dummy);
+void errorCellCritical(uint8_t bitmask) {
+  RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, bitmask);
   Serial.println("Error: Cell critical");
-  delay(1000);
+  // give time for packet to be delivered
+  delay(500);
+  suicide();
 }
