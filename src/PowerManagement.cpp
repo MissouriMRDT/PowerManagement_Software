@@ -2,7 +2,7 @@
 #include "PowerManagement.h"
 #include <LiquidCrystal.h>
 
-LiquidCrystal LCD(LCD_RS_PIN, LCD_EN_PIN, LCD_D0_PIN, LCD_D1_PIN, LCD_D2_PIN, LCD_D3_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
+LiquidCrystal LCD(LCD_RS_PIN, LCD_RW_PIN, LCD_EN_PIN, LCD_D0_PIN, LCD_D1_PIN, LCD_D2_PIN, LCD_D3_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
 //dummy variable
 uint8_t dummy = 0;
@@ -29,7 +29,7 @@ void setup() {
 
   //initialize LCD
   LCD.begin(20,4);
-
+  LCD.noCursor();
   //initialize buzzer
   buzzer.init();
 
@@ -39,7 +39,6 @@ void setup() {
   Serial.println("Starting rovecomm...");
   RoveComm.begin(RC_PMSBOARD_IPADDRESS);
   Serial.println("Rovecomm has been initialized.");
-  
 }
 
 void loop() {
@@ -136,6 +135,7 @@ void loop() {
       break;
     }
   }
+  LCD.clear();
   LCD.write("BattVolts: " );
   LCD.write(packVoltage);
   LCD.setCursor(0,1);
