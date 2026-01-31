@@ -22,14 +22,18 @@ void setup() {
   pinMode(NS_ENABLE, OUTPUT);
   pinMode(AUX_ENABLE, OUTPUT);
 
-  //turn everything on
-  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
-
-  //initialization code
-
   //initialize LCD
   LCD.begin(20,4);
   LCD.noCursor();
+  // print startup thing just "AAAAAAAAA" for now
+  char a[20*4 + 1];
+  memset(a, 'A', sizeof(a));
+  a[20*4] = '\0';
+  LCD.print(a);
+
+  //turn everything on
+  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+
   //initialize buzzer
   buzzer.init();
 
@@ -135,12 +139,6 @@ void loop() {
       break;
     }
   }
-  LCD.clear();
-  LCD.write("BattVolts: " );
-  LCD.write(packVoltage);
-  LCD.setCursor(0,1);
-  LCD.write("BattCurr: ");
-  LCD.write(packCurrent);
   buzzer.update();
 }
 
@@ -309,7 +307,7 @@ void suicide() {
   Serial.println("Suiciding!");
   disableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | NETWORK_ENABLE_BIT | M9_ENABLE_BIT | M2_ENABLE_BIT);
   //buzz infinitely
-  buzzer.buzz("bEEEp===u");
+  buzzer.buzz("bEEEp===");
   while (buzzer.isBuzzing()) {
     buzzer.update();
     delay(5);
@@ -386,6 +384,24 @@ void telemetry() {
     (m9Enabled ? M9_ENABLE_BIT : 0) |
     (nsEnabled ? NETWORK_ENABLE_BIT : 0);
   RoveComm.write(RC_PMSBOARD_BUSSTATUS_DATA_ID,busStatuses);
+
+  // Update LCD
+  LCD.clear();
+  // LCD.write("BattVolts: " );
+  // LCD.write(packVoltage);
+  // LCD.setCursor(0,1);
+  // LCD.write("BattCurr: ");
+  // LCD.write(packCurrent);
+  
+  // 4 lines by 20 chars
+  LCD.setCursor(0,0);
+  LCD.printf("Pack Voltage: %2.2f", packVoltage);
+  LCD.setCursor(0,1);
+  LCD.printf("Pack Current: %2.3f", packCurrent);
+  LCD.setCursor(0,2);
+  LCD.printf("1:%1.2f|2:%1.2f|3:%1.2f", cellVoltages[0], cellVoltages[1], cellVoltages[2]);
+  LCD.setCursor(0,3);
+  LCD.printf("4:%1.2f|5:%1.2f|6:%1.2f", cellVoltages[3], cellVoltages[4], cellVoltages[5]);
 }
 
 void errorPackOvercurrent() {
