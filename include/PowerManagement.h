@@ -44,9 +44,11 @@ bool m9Enabled = false;
 bool nsEnabled = false;
 
 //time variables
-uint32_t lastAcceptableTimePackCurrent = 0;
-uint32_t lastAcceptableTimeAuxCurrent = 0;
-uint32_t lastCellUndervoltage = 0;
+uint32_t lastTimeAcceptablePackCurrent = 0;
+uint32_t lastTimeAcceptableAuxCurrent = 0;
+uint32_t lastTimeAcceptablePackVoltage = 0;
+uint32_t lastTimeNoCellUnderVoltage = 0;
+uint32_t lastTimeNoCellCritical = 0;
 
 //Interval Timer
 #define TELEMETRY_PERIOD 500000

@@ -1,7 +1,7 @@
 //enable pins
 #define LC_ENABLE 5
 #define M2_ENABLE 28
-#define Motor_ENABLE 4
+#define MOTOR_ENABLE 4
 #define M9_ENABLE 11
 #define NS_ENABLE 12
 #define AUX_ENABLE 6
@@ -34,7 +34,6 @@
 #define LCD_D5_PIN 36
 #define LCD_D6_PIN 35
 #define LCD_D7_PIN 34
-
 
 //Buzzer Pin
 #define BUZZER_PIN 23

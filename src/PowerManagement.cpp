@@ -17,7 +17,7 @@ void setup() {
   //pin setup
   pinMode(LC_ENABLE, OUTPUT);
   pinMode(M2_ENABLE, OUTPUT);
-  pinMode(Motor_ENABLE, OUTPUT);
+  pinMode(MOTOR_ENABLE, OUTPUT);
   pinMode(M9_ENABLE, OUTPUT);
   pinMode(NS_ENABLE, OUTPUT);
   pinMode(AUX_ENABLE, OUTPUT);
@@ -73,41 +73,67 @@ void loop() {
   Serial.println(nsCurrent);
   Serial.print("Low current: ");
   Serial.println(lcCurrent);
-  Serial.println("Aux: ");
+  Serial.print("Aux: ");
   Serial.println(auxCurrent);
-  Serial.println("M9: ");
+  Serial.print("M9: ");
   Serial.println(m9Current);
-  Serial.println("M2: ");
+  Serial.print("M2: ");
   Serial.println(m2Current);
 
-  
+  uint32_t currTime = millis();
+
+  uint8_t underVoltageCells = 0;
+  uint8_t criticalCells = 0;
   for (int i = 0; i < 6; i++) {
-    if (cellVoltages[i] < 2.8 && millis() - lastCellUndervoltage > 1000) {
-      errorCellUnderVoltage(1 << i);
-    } else if (cellVoltages[i] < 2.7) {
-      errorCellCritical(1 << i);
+    if (cellVoltages[i] < 0.1) {
+      continue; // unplugged battery or pin pulled out
+    }
+    if (cellVoltages[i] < 2.8) {
+      underVoltageCells |= (1 << i);
+    }
+    if (cellVoltages[i] < 2.7) {
+      criticalCells |= (1 << i);
     }
   }
-  if (packVoltage < 18) {
-    suicide();
+  if (criticalCells) {
+    if (currTime - lastTimeNoCellCritical > 3000) {
+      errorCellCritical(criticalCells);
+    }
+  } else {
+    lastTimeNoCellCritical = currTime;
+
+    // cell undervoltage only if not cellcritical
+    if (underVoltageCells) {
+      if (currTime - lastTimeNoCellUnderVoltage > 3000) {
+        errorCellUnderVoltage(underVoltageCells);
+      }
+    } else {
+      lastTimeNoCellUnderVoltage = currTime;
+    }
   }
-  uint32_t currTime = millis();
+
+  if (packVoltage < 18) {
+    if (currTime - lastTimeAcceptablePackVoltage > 4000) {
+      suicide();
+    }
+  } else {
+    lastTimeAcceptablePackVoltage = currTime;
+  }
+
   if (packCurrent >= 75) {
-    if ((currTime - lastAcceptableTimePackCurrent) >= 5) {
+    if (currTime - lastTimeAcceptablePackCurrent >= 5) {
       errorPackOvercurrent();
     }
-    else {
-      lastAcceptableTimePackCurrent = currTime;
-    }
+  } else {
+    lastTimeAcceptablePackCurrent = currTime;
   }
-  
+
   if (auxCurrent >= 15) {
-    if (currTime - lastAcceptableTimePackCurrent >= 5) {
+    if (currTime - lastTimeAcceptableAuxCurrent >= 5) {
       errorAuxOvercurrent();
     }
-    else {
-      lastAcceptableTimePackCurrent = currTime;
-    }
+  } else {
+    lastTimeAcceptableAuxCurrent = currTime;
   }
 
   //handle rovecom data
@@ -217,7 +243,7 @@ void readPackVotlage() {
  */
 void enableBusses(uint8_t data) {
   if (data & MOTOR_ENABLE_BIT) {
-    digitalWrite(Motor_ENABLE, HIGH);
+    digitalWrite(MOTOR_ENABLE, HIGH);
     motorEnabled = true;
     delay(500);
   }
@@ -252,7 +278,7 @@ void enableBusses(uint8_t data) {
  */
 void disableBusses(uint8_t data) {
   if (data & MOTOR_ENABLE_BIT) {
-    digitalWrite(Motor_ENABLE, LOW);
+    digitalWrite(MOTOR_ENABLE, LOW);
     motorEnabled = false;
   }
   if (data & LC_ENABLE_BIT) {
@@ -425,7 +451,6 @@ void errorCellUnderVoltage(uint8_t bitmask) {
   Serial.println("Error: Cell under voltage");
   eStop();
   buzzer.buzz("beeeeep");
-  lastCellUndervoltage = millis();
 }
 void errorCellCritical(uint8_t bitmask) {
   RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, bitmask);
