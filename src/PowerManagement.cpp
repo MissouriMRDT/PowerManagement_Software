@@ -31,6 +31,10 @@ void setup() {
   memset(a, 'A', sizeof(a));
   a[20*4] = '\0';
   LCD.print(a);
+  
+  //set up teensythread functions
+  currentCheckID = threads.addThread(checkCurrent);
+  mainID = threads.addThread(main);
 
   //turn everything on
   enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
@@ -42,9 +46,6 @@ void setup() {
 
   telemetryRunner.begin(telemetry, TELEMETRY_PERIOD);
 
-  //set up teensythread functions
-  currentCheckID = threads.addThread(checkCurrent);
-  mainID = threads.addThread(main);
 
   threads.setTimeSlice(currentCheckID, 50);
   threads.setTimeSlice(mainID, 100);
