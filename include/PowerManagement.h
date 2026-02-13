@@ -21,6 +21,8 @@ int mainID = 0;
 
 //bus change check variables
 bool isDisabling = false;
+bool ranOnce = false;
+
 
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;

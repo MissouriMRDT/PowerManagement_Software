@@ -56,7 +56,10 @@ void loop() {}
 
 void mainThread() {
   //turn everything on once
-  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  if (!ranOnce) {
+    enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+    ranOnce = true;
+  }
   while (1) {
     //update current values
     readCellVoltages();
@@ -238,7 +241,6 @@ void enableBusses(uint8_t data) {
   if ((data & MOTOR_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(MOTOR_ENABLE, HIGH);
     motorEnabled = true;
-
     threads.delay(500);
   }
   if ((data & LC_ENABLE_BIT) && (isDisabling == false)) {
