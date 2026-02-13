@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "PowerManagement.h"
 #include <LiquidCrystal.h>
+#include <TeensyThreads.h>
 
 LiquidCrystal LCD(LCD_RS_PIN, LCD_RW_PIN, LCD_EN_PIN, LCD_D0_PIN, LCD_D1_PIN, LCD_D2_PIN, LCD_D3_PIN, LCD_D4_PIN, LCD_D5_PIN, LCD_D6_PIN, LCD_D7_PIN);
 
@@ -33,28 +34,34 @@ void setup() {
 
   //turn everything on
   enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  
+
 
   //initialize buzzer
   buzzer.init();
 
   telemetryRunner.begin(telemetry, TELEMETRY_PERIOD);
 
+  //set up teensythread functions
+  currentCheckID = threads.addThread(checkCurrent);
+  mainID = threads.addThread(main);
+
+  threads.setTimeSlice(currentCheckID, 50);
+  threads.setTimeSlice(mainID, 100);
+
+
   //start up rovecomm
   Serial.println("Starting rovecomm...");
   RoveComm.begin(RC_PMSBOARD_IPADDRESS);
   Serial.println("Rovecomm has been initialized.");
 }
+void loop() {}
 
-void loop() {
+
+void main() {
   //update current values
   readCellVoltages();
-  readPackCurrent();
   readPackVotlage();
-  readAuxCurrent();
-  readLCCurrent();
-  readM2Current();
-  readM9Current();
-  readNSCurrent();
 
   Serial.print("BattVolts: ");
   Serial.println(packVoltage);
@@ -245,32 +252,32 @@ void enableBusses(uint8_t data) {
   if (data & MOTOR_ENABLE_BIT) {
     digitalWrite(MOTOR_ENABLE, HIGH);
     motorEnabled = true;
-    delay(500);
+    threads.delay(500);
   }
   if (data & LC_ENABLE_BIT) {
     digitalWrite(LC_ENABLE, HIGH);
     lowCurrentEnabled = true;
-    delay(500);
+    threads.delay(500);
   }
   if (data & AUX_ENABLE_BIT) {
     digitalWrite(AUX_ENABLE, HIGH);
     auxEnabled = true;
-    delay(500);
+    threads.delay(500);
   }
   if (data & M2_ENABLE_BIT) {
     digitalWrite(M2_ENABLE, HIGH);
     m2Enabled = true;
-    delay(500);
+    threads.delay(500);
   }
   if (data & M9_ENABLE_BIT) {
     digitalWrite(M9_ENABLE, HIGH);
     m9Enabled = true;
-    delay(500);
+    threads.delay(500);
   }
   if (data & NETWORK_ENABLE_BIT) {
     digitalWrite(NS_ENABLE, HIGH);
     nsEnabled = true;
-    delay(500);
+    threads.delay(500);
   }
 }
 /**
@@ -458,4 +465,42 @@ void errorCellCritical(uint8_t bitmask) {
   // give time for packet to be delivered
   delay(500);
   suicide();
+}
+void checkCurrent() {
+  uint32_t currTime = 0;
+  while (1) {
+    //update current values
+    readPackCurrent();
+    readAuxCurrent();
+    readLCCurrent();
+    readM2Current();
+    readM9Current();
+    readNSCurrent();
+
+    //check for dangerous current/voltage
+    uint32_t currTime = millis();
+    if (packVoltage < 18) {
+      if (currTime - lastTimeAcceptablePackVoltage > 4000) {
+        suicide();
+      }
+    } else {
+      lastTimeAcceptablePackVoltage = currTime;
+    }
+
+    if (packCurrent >= 75) {
+      if (currTime - lastTimeAcceptablePackCurrent >= 5) {
+        errorPackOvercurrent();
+      }
+    } else {
+      lastTimeAcceptablePackCurrent = currTime;
+    }
+
+    if (auxCurrent >= 15) {
+      if (currTime - lastTimeAcceptableAuxCurrent >= 5) {
+        errorAuxOvercurrent();
+      }
+    } else {
+      lastTimeAcceptableAuxCurrent = currTime;
+    }
+  }
 }

@@ -15,7 +15,9 @@ Buzzer buzzer(BUZZER_PIN);
 int cellPins[6] = {CELL_SENSE_1_PIN, CELL_SENSE_2_PIN,CELL_SENSE_3_PIN, CELL_SENSE_4_PIN, CELL_SENSE_5_PIN, CELL_SENSE_6_PIN};
 float cellVoltages[6] = {0};
 
-
+//thread ids
+int currentCheckID = 0;
+int mainID = 0;
 
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;
@@ -84,6 +86,9 @@ void readLCCurrent();
 void readM9Current();
 void readM2Current();
 void readCellVoltages();
+void checkCurrent();
+
+
 
 void telemetry();
 float map_float(float x, float in_min, float in_max, float out_min, float out_max);
