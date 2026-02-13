@@ -34,21 +34,16 @@ void setup() {
   
   //set up teensythread functions
   currentCheckID = threads.addThread(checkCurrent);
-  mainID = threads.addThread(main);
-
+  mainID = threads.addThread(mainThread);
+  threads.setTimeSlice(currentCheckID, 50);
+  threads.setTimeSlice(mainID, 150);
   //turn everything on
-  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  // enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
   
-
-
   //initialize buzzer
   buzzer.init();
 
   telemetryRunner.begin(telemetry, TELEMETRY_PERIOD);
-
-
-  threads.setTimeSlice(currentCheckID, 50);
-  threads.setTimeSlice(mainID, 100);
 
 
   //start up rovecomm
@@ -59,121 +54,110 @@ void setup() {
 void loop() {}
 
 
-void main() {
-  //update current values
-  readCellVoltages();
-  readPackVotlage();
+void mainThread() {
+  //turn everything on once
+  enableBusses(MOTOR_ENABLE_BIT | LC_ENABLE_BIT | AUX_ENABLE_BIT | M2_ENABLE_BIT | M9_ENABLE_BIT | NETWORK_ENABLE_BIT);
+  while (1) {
+    //update current values
+    readCellVoltages();
+    readPackVotlage();
 
-  Serial.print("BattVolts: ");
-  Serial.println(packVoltage);
-  Serial.println("Cell Voltages: ");
-  for(int i = 0; i < NUM_CELLS; i++) {
-    Serial.print("Cell ");
-    Serial.print(i);
-    Serial.print(": ");
-    Serial.println(cellVoltages[i]);
-  }
-
-  Serial.print("Battery Current: ");
-  Serial.println(packCurrent);
-  Serial.println("Ports Current: ");
-  Serial.print("Network switch: ");
-  Serial.println(nsCurrent);
-  Serial.print("Low current: ");
-  Serial.println(lcCurrent);
-  Serial.print("Aux: ");
-  Serial.println(auxCurrent);
-  Serial.print("M9: ");
-  Serial.println(m9Current);
-  Serial.print("M2: ");
-  Serial.println(m2Current);
-
-  uint32_t currTime = millis();
-
-  uint8_t underVoltageCells = 0;
-  uint8_t criticalCells = 0;
-  for (int i = 0; i < 6; i++) {
-    if (cellVoltages[i] < 0.1) {
-      continue; // unplugged battery or pin pulled out
+    Serial.print("BattVolts: ");
+    Serial.println(packVoltage);
+    Serial.println("Cell Voltages: ");
+    for(int i = 0; i < NUM_CELLS; i++) {
+      Serial.print("Cell ");
+      Serial.print(i);
+      Serial.print(": ");
+      Serial.println(cellVoltages[i]);
     }
-    if (cellVoltages[i] < 2.8) {
-      underVoltageCells |= (1 << i);
-    }
-    if (cellVoltages[i] < 2.7) {
-      criticalCells |= (1 << i);
-    }
-  }
-  if (criticalCells) {
-    if (currTime - lastTimeNoCellCritical > 3000) {
-      errorCellCritical(criticalCells);
-    }
-  } else {
-    lastTimeNoCellCritical = currTime;
 
-    // cell undervoltage only if not cellcritical
-    if (underVoltageCells) {
-      if (currTime - lastTimeNoCellUnderVoltage > 3000) {
-        errorCellUnderVoltage(underVoltageCells);
+    Serial.print("Battery Current: ");
+    Serial.println(packCurrent);
+    Serial.println("Ports Current: ");
+    Serial.print("Network switch: ");
+    Serial.println(nsCurrent);
+    Serial.print("Low current: ");
+    Serial.println(lcCurrent);
+    Serial.print("Aux: ");
+    Serial.println(auxCurrent);
+    Serial.print("M9: ");
+    Serial.println(m9Current);
+    Serial.print("M2: ");
+    Serial.println(m2Current);
+
+    uint32_t currTime = millis();
+
+    uint8_t underVoltageCells = 0;
+    uint8_t criticalCells = 0;
+    for (int i = 0; i < 6; i++) {
+      if (cellVoltages[i] < 0.1) {
+        continue; // unplugged battery or pin pulled out
+      }
+      if (cellVoltages[i] < 2.8) {
+        underVoltageCells |= (1 << i);
+      }
+      if (cellVoltages[i] < 2.7) {
+        criticalCells |= (1 << i);
+      }
+    }
+    if (criticalCells) {
+      if (currTime - lastTimeNoCellCritical > 3000) {
+        errorCellCritical(criticalCells);
       }
     } else {
-      lastTimeNoCellUnderVoltage = currTime;
-    }
-  }
+      lastTimeNoCellCritical = currTime;
 
-  if (packVoltage < 18) {
-    if (currTime - lastTimeAcceptablePackVoltage > 4000) {
-      suicide();
+      // cell undervoltage only if not cellcritical
+      if (underVoltageCells) {
+        if (currTime - lastTimeNoCellUnderVoltage > 3000) {
+          errorCellUnderVoltage(underVoltageCells);
+        }
+      } else {
+        lastTimeNoCellUnderVoltage = currTime;
+      }
     }
-  } else {
-    lastTimeAcceptablePackVoltage = currTime;
-  }
 
-  if (packCurrent >= 75) {
-    if (currTime - lastTimeAcceptablePackCurrent >= 5) {
-      errorPackOvercurrent();
+    if (packVoltage < 18) {
+      if (currTime - lastTimeAcceptablePackVoltage > 4000) {
+        suicide();
+      }
+    } else {
+      lastTimeAcceptablePackVoltage = currTime;
     }
-  } else {
-    lastTimeAcceptablePackCurrent = currTime;
-  }
 
-  if (auxCurrent >= 15) {
-    if (currTime - lastTimeAcceptableAuxCurrent >= 5) {
-      errorAuxOvercurrent();
-    }
-  } else {
-    lastTimeAcceptableAuxCurrent = currTime;
-  }
 
-  //handle rovecom data
-  RoveComm.read(packet);
-  switch (packet.dataId) {
-    case RC_PMSBOARD_ESTOP_DATA_ID: 
-      eStop();
-      break;
-    case RC_PMSBOARD_REBOOT_DATA_ID:
-      restart();
-      break;
-    case RC_PMSBOARD_SUICIDE_DATA_ID:
-      suicide();
-      break;
-    case RC_PMSBOARD_ENABLEBUS_DATA_ID:
-      enableBusses(((uint8_t*)packet.data)[0]);
-      break;
-    case RC_PMSBOARD_DISABLEBUS_DATA_ID:
-    {  
-      uint8_t data = ((uint8_t*)packet.data)[0] & ~NETWORK_ENABLE_BIT;
-      disableBusses(data);
-      break;
+    //handle rovecom data
+    RoveComm.read(packet);
+    switch (packet.dataId) {
+      case RC_PMSBOARD_ESTOP_DATA_ID: 
+        eStop();
+        break;
+      case RC_PMSBOARD_REBOOT_DATA_ID:
+        restart();
+        break;
+      case RC_PMSBOARD_SUICIDE_DATA_ID:
+        suicide();
+        break;
+      case RC_PMSBOARD_ENABLEBUS_DATA_ID:
+        enableBusses(((uint8_t*)packet.data)[0]);
+        break;
+      case RC_PMSBOARD_DISABLEBUS_DATA_ID:
+      {  
+        uint8_t data = ((uint8_t*)packet.data)[0] & ~NETWORK_ENABLE_BIT;
+        disableBusses(data);
+        break;
+      }
+      case RC_PMSBOARD_SETBUS_DATA_ID:
+      {
+        uint8_t data = ((uint8_t*)packet.data)[0] | NETWORK_ENABLE_BIT; // make sure network switch is also enabled
+        enableBusses(data);
+        disableBusses(~data);
+        break;
+      }
     }
-    case RC_PMSBOARD_SETBUS_DATA_ID:
-    {
-      uint8_t data = ((uint8_t*)packet.data)[0] | NETWORK_ENABLE_BIT; // make sure network switch is also enabled
-      enableBusses(data);
-      disableBusses(~data);
-      break;
-    }
+    buzzer.update();
   }
-  buzzer.update();
 }
 
 /*
@@ -250,32 +234,34 @@ void readPackVotlage() {
  * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS, M2, M9
  */
 void enableBusses(uint8_t data) {
-  if (data & MOTOR_ENABLE_BIT) {
+  
+  if ((data & MOTOR_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(MOTOR_ENABLE, HIGH);
     motorEnabled = true;
+
     threads.delay(500);
   }
-  if (data & LC_ENABLE_BIT) {
+  if ((data & LC_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(LC_ENABLE, HIGH);
     lowCurrentEnabled = true;
     threads.delay(500);
   }
-  if (data & AUX_ENABLE_BIT) {
+  if ((data & AUX_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(AUX_ENABLE, HIGH);
     auxEnabled = true;
     threads.delay(500);
   }
-  if (data & M2_ENABLE_BIT) {
+  if ((data & M2_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(M2_ENABLE, HIGH);
     m2Enabled = true;
     threads.delay(500);
   }
-  if (data & M9_ENABLE_BIT) {
+  if ((data & M9_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(M9_ENABLE, HIGH);
     m9Enabled = true;
     threads.delay(500);
   }
-  if (data & NETWORK_ENABLE_BIT) {
+  if ((data & NETWORK_ENABLE_BIT) && (isDisabling == false)) {
     digitalWrite(NS_ENABLE, HIGH);
     nsEnabled = true;
     threads.delay(500);
@@ -285,7 +271,8 @@ void enableBusses(uint8_t data) {
  * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS, M2, M9
  */
 void disableBusses(uint8_t data) {
-  if (data & MOTOR_ENABLE_BIT) {
+  isDisabling = true;
+  if ((data & MOTOR_ENABLE_BIT)) {
     digitalWrite(MOTOR_ENABLE, LOW);
     motorEnabled = false;
   }
@@ -309,6 +296,7 @@ void disableBusses(uint8_t data) {
     digitalWrite(M9_ENABLE, LOW);
     m9Enabled = false;
   }
+  isDisabling = false;
 }
 
 /**
@@ -479,15 +467,8 @@ void checkCurrent() {
     readNSCurrent();
 
     //check for dangerous current/voltage
-    uint32_t currTime = millis();
-    if (packVoltage < 18) {
-      if (currTime - lastTimeAcceptablePackVoltage > 4000) {
-        suicide();
-      }
-    } else {
-      lastTimeAcceptablePackVoltage = currTime;
-    }
-
+    currTime = millis();
+    
     if (packCurrent >= 75) {
       if (currTime - lastTimeAcceptablePackCurrent >= 5) {
         errorPackOvercurrent();
@@ -503,5 +484,6 @@ void checkCurrent() {
     } else {
       lastTimeAcceptableAuxCurrent = currTime;
     }
+    //TODO: check other system's currents
   }
 }

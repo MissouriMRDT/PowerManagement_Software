@@ -19,6 +19,9 @@ float cellVoltages[6] = {0};
 int currentCheckID = 0;
 int mainID = 0;
 
+//bus change check variables
+bool isDisabling = false;
+
 float packVoltage = 0.0f;
 float packCurrent = 0.0f;
 float auxCurrent = 0.0f;
@@ -93,3 +96,6 @@ void checkCurrent();
 void telemetry();
 float map_float(float x, float in_min, float in_max, float out_min, float out_max);
 float mapCellVoltage(float measured);
+
+void mainThread();
+void checkCurrent();
