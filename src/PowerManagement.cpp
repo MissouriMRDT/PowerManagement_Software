@@ -267,6 +267,7 @@ void enableBusses(uint8_t data) {
     nsEnabled = true;
     threads.delay(500);
   }
+  threads.kill(animationID);
 }
 /**
  * @param data bitmask of system states (1 or 0) in order of MOTOR, LC, AUX, NS, M2, M9
@@ -410,7 +411,7 @@ void telemetry() {
 
   
   // 4 lines by 20 chars
-  if (threads.getState(animationID) == threads.SUSPENDED) {
+  if (threads.getState(animationID) == threads.ENDED) {
     // Update LCD
     LCD.clear();
     LCD.write("BattVolts: " );
@@ -448,15 +449,15 @@ void errorAuxOvercurrent() {
 void errorCellUnderVoltage(uint8_t bitmask) {
   RoveComm.write(RC_PMSBOARD_CELLUNDERVOLTAGE_DATA_ID, bitmask);
   Serial.println("Error: Cell under voltage");
-  eStop();
-  buzzer.buzz("beeeeep");
+  // eStop();
+  // buzzer.buzz("beeeeep");
 }
 void errorCellCritical(uint8_t bitmask) {
   RoveComm.write(RC_PMSBOARD_CELLCRITICAL_DATA_ID, bitmask);
   Serial.println("Error: Cell critical");
   // give time for packet to be delivered
-  delay(500);
-  suicide();
+  // delay(500);
+  // suicide();
 }
 void checkCurrent() {
   uint32_t currTime = 0;
@@ -474,7 +475,7 @@ void checkCurrent() {
     
     if (packCurrent >= 75) {
       if (currTime - lastTimeAcceptablePackCurrent >= 5) {
-        // errorPackOvercurrent();
+        errorPackOvercurrent();
       }
     } else {
       lastTimeAcceptablePackCurrent = currTime;
@@ -482,7 +483,7 @@ void checkCurrent() {
 
     if (auxCurrent >= 15) {
       if (currTime - lastTimeAcceptableAuxCurrent >= 5) {
-        // errorAuxOvercurrent();
+        errorAuxOvercurrent();
       }
     } else {
       lastTimeAcceptableAuxCurrent = currTime;
@@ -492,94 +493,89 @@ void checkCurrent() {
 }
 
 void animationThread() {
-  while(1) {
-    if (nsEnabled == true) {
-      threads.suspend(animationID);
-    }
-    LCD.clear();
-
-    LCD.setCursor(0, 0);
-    LCD.print("ATHENA INITIALIZING:");
   
-    LCD.createChar(7, name0x12);
-    LCD.setCursor(12, 2); 
-    LCD.write(7);
+  LCD.clear();
 
-    LCD.createChar(1, name0x13); 
-    LCD.setCursor(13, 2); 
-    LCD.write(1); 
+  LCD.setCursor(0, 0);
+  LCD.print("ATHENA INITIALIZING:");
 
-    LCD.createChar(2, name0x14); 
-    LCD.setCursor(14, 2); 
-    LCD.write(2); 
+  LCD.createChar(7, name0x12);
+  LCD.setCursor(12, 2); 
+  LCD.write(7);
 
-    LCD.createChar(3, name1x11); 
-    LCD.setCursor(11, 3); 
-    LCD.write(3); 
+  LCD.createChar(1, name0x13); 
+  LCD.setCursor(13, 2); 
+  LCD.write(1); 
 
-    LCD.createChar(4, name1x12); 
-    LCD.setCursor(12, 3); 
-    LCD.write(4); 
+  LCD.createChar(2, name0x14); 
+  LCD.setCursor(14, 2); 
+  LCD.write(2); 
 
-    LCD.createChar(5, name1x13); 
-    LCD.setCursor(13, 3); 
-    LCD.write(5); 
+  LCD.createChar(3, name1x11); 
+  LCD.setCursor(11, 3); 
+  LCD.write(3); 
 
-    LCD.createChar(6, name1x14); 
-    LCD.setCursor(14, 3); 
-    LCD.write(6); 
-    LCD.setCursor(3,0);
+  LCD.createChar(4, name1x12); 
+  LCD.setCursor(12, 3); 
+  LCD.write(4); 
 
-    LCD.setCursor(0, 3);
-    LCD.print(" ,  . _ , ");
-    
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(",  . _ ,  ");
+  LCD.createChar(5, name1x13); 
+  LCD.setCursor(13, 3); 
+  LCD.write(5); 
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print("  . _ ,  .");
+  LCD.createChar(6, name1x14); 
+  LCD.setCursor(14, 3); 
+  LCD.write(6); 
+  LCD.setCursor(3,0);
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(" . _ ,  . ");
+  LCD.setCursor(0, 3);
+  LCD.print(" ,  . _ , ");
+  
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(",  . _ ,  ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(". _ ,  .  ");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print("  . _ ,  .");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(" _ ,  .  ,");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(" . _ ,  . ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print("_ ,  .  , ");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(". _ ,  .  ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(" ,  .  ,  ");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(" _ ,  .  ,");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(",  .  ,  .");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print("_ ,  .  , ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print("  .  ,  . ");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(" ,  .  ,  ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(" .  ,  . _");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(",  .  ,  .");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print(".  ,  . _ ");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print("  .  ,  . ");
 
-    threads.delay(400);
-    LCD.setCursor(0, 3);
-    LCD.print("  ,  . _ ,");
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(" .  ,  . _");
 
-  }
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print(".  ,  . _ ");
+
+  threads.delay(400);
+  LCD.setCursor(0, 3);
+  LCD.print("  ,  . _ ,");
 }
