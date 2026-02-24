@@ -18,6 +18,7 @@ float cellVoltages[6] = {0};
 //thread ids
 int currentCheckID = 0;
 int mainID = 0;
+int animationID = 0;
 
 //bus change check variables
 bool isDisabling = false;
@@ -101,3 +102,11 @@ float mapCellVoltage(float measured);
 
 void mainThread();
 void checkCurrent();
+void animationThread();
+byte name0x12[] = { B00000, B10000, B10100, B10100, B01000, B01000, B01000, B11111 }; 
+byte name0x13[] = { B00000, B01100, B01000, B01000, B01001, B01001, B01011, B11011 }; 
+byte name0x14[] = { B00000, B00000, B00000, B10000, B11000, B01000, B00100, B00100 }; 
+byte name1x11[] = { B00001, B00001, B00000, B00000, B01100, B10011, B10010, B01100 }; 
+byte name1x12[] = { B00000, B00000, B11111, B00110, B11001, B00010, B00010, B00001 }; 
+byte name1x13[] = { B00111, B10110, B01000, B00110, B11001, B01000, B01000, B10000 }; 
+byte name1x14[] = { B00011, B00010, B00000, B00000, B10110, B01001, B01001, B00110 }; 
