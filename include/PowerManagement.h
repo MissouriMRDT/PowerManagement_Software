@@ -25,13 +25,13 @@ bool isDisabling = false;
 bool ranOnce = false;
 
 
-float packVoltage = 0.0f;
-float packCurrent = 0.0f;
-float auxCurrent = 0.0f;
-float nsCurrent = 0.0f;
-float m9Current = 0.0f;
-float m2Current = 0.0f;
-float lcCurrent = 0.0f;
+volatile float packVoltage = 0.0f;
+volatile float packCurrent = 0.0f;
+volatile float auxCurrent = 0.0f;
+volatile float nsCurrent = 0.0f;
+volatile float m9Current = 0.0f;
+volatile float m2Current = 0.0f;
+volatile float lcCurrent = 0.0f;
   
 float telemArray[12] = {packCurrent, auxCurrent, lcCurrent, nsCurrent, m2Current, m9Current,0,0,0,0,0,0};
 
@@ -57,6 +57,7 @@ uint32_t lastTimeAcceptableAuxCurrent = 0;
 uint32_t lastTimeAcceptablePackVoltage = 0;
 uint32_t lastTimeNoCellUnderVoltage = 0;
 uint32_t lastTimeNoCellCritical = 0;
+uint32_t currTimeCurrentCheck = 0;
 
 //Interval Timer
 #define TELEMETRY_PERIOD 500000
@@ -103,10 +104,41 @@ float mapCellVoltage(float measured);
 void mainThread();
 void checkCurrent();
 void animationThread();
-byte name0x12[] = { B00000, B10000, B10100, B10100, B01000, B01000, B01000, B11111 }; 
-byte name0x13[] = { B00000, B01100, B01000, B01000, B01001, B01001, B01011, B11011 }; 
-byte name0x14[] = { B00000, B00000, B00000, B10000, B11000, B01000, B00100, B00100 }; 
-byte name1x11[] = { B00001, B00001, B00000, B00000, B01100, B10011, B10010, B01100 }; 
-byte name1x12[] = { B00000, B00000, B11111, B00110, B11001, B00010, B00010, B00001 }; 
-byte name1x13[] = { B00111, B10110, B01000, B00110, B11001, B01000, B01000, B10000 }; 
-byte name1x14[] = { B00011, B00010, B00000, B00000, B10110, B01001, B01001, B00110 }; 
+
+//normal rover ascii definition
+byte nr_name0x12[] = { B00000, B10000, B10100, B10100, B01000, B01000, B01000, B11111 }; 
+byte nr_name0x13[] = { B00000, B01100, B01000, B01000, B01001, B01001, B01011, B11011 }; 
+byte nr_name0x14[] = { B00000, B00000, B00000, B10000, B11000, B01000, B00100, B00100 }; 
+byte nr_name1x11[] = { B00001, B00001, B00000, B00000, B01100, B10011, B10010, B01100 }; 
+byte nr_name1x12[] = { B00000, B00000, B11111, B00110, B11001, B00010, B00010, B00001 }; 
+byte nr_name1x13[] = { B00111, B10110, B01000, B00110, B11001, B01000, B01000, B10000 }; 
+byte nr_name1x14[] = { B00011, B00010, B00000, B00000, B10110, B01001, B01001, B00110 }; 
+
+//custom rover puc implementations
+byte puc_name1x13[] = { B00111, B01000, B00110, B11001, B01000, B01001, B10000, B11001 };
+byte puc_name0x11[] = { B00000, B00000, B00000, B00000, B00000, B00000, B00000, B00001 };
+byte puc_name0x12[] = { B10000, B10100, B10100, B01000, B01000, B01000, B11111, B00000 };
+byte puc_name0x13[] = { B01100, B01000, B01000, B01001, B01001, B01011, B11011, B00111 };
+byte puc_name0x14[] = { B00000, B00000, B10000, B11000, B01000, B00100, B00100, B00111 };
+byte puc_name1x11[] = { B00001, B00000, B00000, B01100, B10011, B10010, B01111, B00011 };
+byte puc_name1x12[] = { B00000, B11111, B00110, B11001, B00010, B00010, B00001, B00011 };
+byte puc_name1x14[] = { B00010, B00000, B00000, B10110, B01001, B11001, B10110, B00000 };
+
+//custom rover cpu implentation
+byte cpu_name1x14[] = { B00010, B00000, B00000, B10110, B01001, B01001, B00110, B11111 };
+byte cpu_name0x11[] = { B00000, B00000, B00000, B00000, B00000, B00000, B00000, B00001 };
+byte cpu_name0x12[] = { B10000, B10100, B10100, B01000, B01000, B01000, B11111, B00000 };
+byte cpu_name0x13[] = { B01100, B01000, B01000, B01001, B01001, B01011, B11011, B00111 };
+byte cpu_name0x14[] = { B00000, B00000, B10000, B11000, B01000, B00100, B00100, B00111 };
+byte cpu_name1x11[] = { B00001, B00000, B00000, B01100, B10011, B10011, B01100, B00001 };
+byte cpu_name1x12[] = { B00000, B11111, B00110, B11001, B00010, B10010, B10001, B00000 };
+byte cpu_name1x13[] = { B00111, B01000, B00110, B11001, B01000, B01000, B11100, B01100 };
+//custom rover ucp implentation
+byte ucp_name1x14[] = { B00010, B00000, B00000, B10110, B01001, B01001, B11110, B11000 };
+byte ucp_name0x11[] = { B00000, B00000, B00000, B00000, B00000, B00000, B00000, B00001 };
+byte ucp_name0x12[] = { B10000, B10100, B10100, B01000, B01000, B01000, B11111, B00000 };
+byte ucp_name0x13[] = { B01100, B01000, B01000, B01001, B01001, B01011, B11011, B00111 };
+byte ucp_name0x14[] = { B00000, B00000, B10000, B11000, B01000, B00100, B00100, B00111 };
+byte ucp_name1x11[] = { B00001, B00000, B00000, B01100, B10011, B10011, B01100, B11111 };
+byte ucp_name1x12[] = { B00000, B11111, B00110, B11001, B00010, B00010, B00001, B00000 };
+byte ucp_name1x13[] = { B00111, B01000, B00110, B11001, B01000, B01110, B10010, B00100 };
