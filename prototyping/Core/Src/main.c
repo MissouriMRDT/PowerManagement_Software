@@ -61,7 +61,7 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+uint_32 getADCValue(ADC_HandleTypeDef *hadc, uint_32 channel);
 /* USER CODE END 0 */
 
 /**
@@ -101,15 +101,17 @@ int main(void)
   MX_ICACHE_Init();
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
-  int value;
+
+
+  uint_32 adcValue;
+  uint_32 voltage;
+  uint_32 slope;
+  uint_32 b;
+
+
+
   HAL_StatusTypeDef flag;
 
-   HAL_ADC_Start(&hadc1);//start conversion
-   flag = HAL_ADC_PollForConversion(&hadc1, 1000);//wait ntil statu flag giveas the ok
-   if(flag == HAL_OK)
-   {
-	  value = HAL_ADC_GetValue(&hadc1);
-   }
 
   /* USER CODE END 2 */
 
@@ -118,6 +120,14 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
+	  getADCValue(ADC_CHANNEL_0);
+	  HAL_Delay(100);				//add other channels
+	  printf("Pin1: %d \n", adcvalue);
+	  //put in math
+	  printf("%d Volts\n", voltage);
+	  getADCValue(ADC_CHANNEL_0);
+	  HAL_Delay(100);
+
 
     /* USER CODE BEGIN 3 */
   }
@@ -342,7 +352,22 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+uint_32 getADCValue(ADC_HandleTypeDef *hadc, uint_32 channel)
+{
+	uint_32 value;
+	sConfig.Channel = channel;
 
+
+	HAL_ADC_Start(&hadc1);//start conversion
+	flag = HAL_ADC_PollForConversion(&hadc1, 1000);//wait ntil statu flag giveas the ok
+	if(flag == HAL_OK)
+	{
+		value = HAL_ADC_GetValue(&hadc1);
+	}
+	HAL_ADC_Stop(&hadc1);
+
+	return value;
+}
 /* USER CODE END 4 */
 
  /* MPU Configuration */
