@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +61,8 @@ static void MX_ADC1_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-uint_32 getADCValue(ADC_HandleTypeDef *hadc, uint_32 channel);
+uint32_t getADCValue( uint32_t channel);
+
 /* USER CODE END 0 */
 
 /**
@@ -102,15 +103,13 @@ int main(void)
   MX_ADC1_Init();
   /* USER CODE BEGIN 2 */
 
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+  uint32_t adcValue;
+  uint32_t voltage;
+  const uint32_t slope;
+  const uint32_t b;
 
-  uint_32 adcValue;
-  uint_32 voltage;
-  uint_32 slope;
-  uint_32 b;
 
-
-
-  HAL_StatusTypeDef flag;
 
 
   /* USER CODE END 2 */
@@ -119,15 +118,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    /* USER CODE END WHILE */
-	  getADCValue(ADC_CHANNEL_0);
+	  adcValue = getADCValue(ADC_CHANNEL_12);
 	  HAL_Delay(100);				//add other channels
-	  printf("Pin1: %d \n", adcvalue);
-	  //put in math
-	  printf("%d Volts\n", voltage);
-	  getADCValue(ADC_CHANNEL_0);
-	  HAL_Delay(100);
-
+	  printf("Pin1: %d \n", adcValue);
+	  	  //put in math
+	  	 /* printf("%d Volts\n", voltage);
+	  	  getADCValue(ADC_CHANNEL_12);
+	  	  HAL_Delay(100);
+    /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
   }
@@ -198,6 +196,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE END ADC1_Init 0 */
 
   ADC_ChannelConfTypeDef sConfig = {0};
+  //ADC_ChannelConfTypeDef sConfig2 = {12};
 
   /* USER CODE BEGIN ADC1_Init 1 */
 
@@ -352,18 +351,27 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-uint_32 getADCValue(ADC_HandleTypeDef *hadc, uint_32 channel)
+uint32_t getADCValue(uint32_t channel)
 {
-	uint_32 value;
-	sConfig.Channel = channel;
+	uint32_t value;
 
+	ADC_ChannelConfTypeDef sConfig2 = {0};
 
+	sConfig2.Channel = channel;
+	sConfig2.Rank = ADC_REGULAR_RANK_1;
+	sConfig2.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+	sConfig2.SingleDiff = ADC_SINGLE_ENDED;
+	sConfig2.OffsetNumber = ADC_OFFSET_NONE;
+	sConfig2.Offset = 0;
+	HAL_ADC_ConfigChannel(&hadc1, &sConfig2);
+	HAL_StatusTypeDef flag;
 	HAL_ADC_Start(&hadc1);//start conversion
 	flag = HAL_ADC_PollForConversion(&hadc1, 1000);//wait ntil statu flag giveas the ok
 	if(flag == HAL_OK)
 	{
 		value = HAL_ADC_GetValue(&hadc1);
 	}
+
 	HAL_ADC_Stop(&hadc1);
 
 	return value;
